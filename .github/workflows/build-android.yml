@@ -15,13 +15,19 @@ jobs:
       - name: Copy latest app page into the Android app
         run: cp web/index.html android/app/src/main/assets/index.html
       - name: Restore signing key
-        env: { KS: '${{ secrets.KEYSTORE_BASE64 }}' }
+        env:
+          KS: '${{ secrets.KEYSTORE_BASE64 }}'
+          PW: '${{ secrets.KEYSTORE_PASSWORD }}'
+        shell: bash
         run: |
-          if [ -z "$KS" ]; then echo "::error::Add the KEYSTORE_BASE64 and KEYSTORE_PASSWORD secrets (Settings > Secrets and variables > Actions), then run this workflow again."; exit 1; fi
-          echo "$KS" | base64 -d > android/app/release.jks
+          if [ -z "$KS" ] || [ -z "$PW" ]; then echo "::error::Add the KEYSTORE_BASE64 and KEYSTORE_PASSWORD secrets, then run this workflow again."; exit 1; fi
+          clean() { printf '%s' "$1" | sed -E 's/^[[:space:]]*(Value[^:]*:)?[[:space:]]*//' | tr -d '[:space:]'; }
+          KSC=$(clean "$KS"); PWC=$(clean "$PW")
+          printf '%s' "$KSC" | base64 -d > android/app/release.jks || true
+          echo "::add-mask::$PWC"; echo "KEYSTORE_PASSWORD=$PWC" >> "$GITHUB_ENV"
+          echo "keystore_base64_chars=${#KSC} (expected 3432) keystore_bytes=$(stat -c%s android/app/release.jks) (expected 2574) password_chars=${#PWC} (expected 24)" | tee secrets-check.txt
       - name: Build APK
         env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           VERSION_CODE: ${{ github.run_number }}
         run: gradle -p android assembleRelease --stacktrace 2>&1 | tee build.log; exit ${PIPESTATUS[0]}
         shell: bash
@@ -36,5 +42,5 @@ jobs:
         env: { GH_TOKEN: '${{ github.token }}' }
         run: |
           [ -f build.log ] || echo "No build log (failed before the build step)" > build.log
-          { echo '```'; grep -nE "FAILURE|What went wrong|error:|Error|Exception|Could not|> " build.log | head -80; echo '---- last lines ----'; tail -60 build.log; echo '```'; } > report.md
+          { cat secrets-check.txt 2>/dev/null; echo '```'; grep -nE "FAILURE|What went wrong|error:|Error|Exception|Could not|> " build.log | head -80; echo '---- last lines ----'; tail -60 build.log; echo '```'; } > report.md
           gh issue create --title "Android build ${{ github.run_number }} failed" --body-file report.md
