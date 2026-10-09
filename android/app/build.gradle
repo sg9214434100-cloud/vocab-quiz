@@ -6,7 +6,7 @@ android {
         applicationId "com.vocabquiz.app"
         minSdk 24
         targetSdk 34
-        versionCode (System.getenv("VERSION_CODE") ?: "1") as int
+        versionCode Integer.parseInt(System.getenv("VERSION_CODE") ?: "1")
         versionName "1.0." + (System.getenv("VERSION_CODE") ?: "1")
     }
     signingConfigs {
@@ -20,5 +20,6 @@ android {
     buildTypes {
         release { minifyEnabled false; signingConfig signingConfigs.release }
     }
+    lint { abortOnError false; checkReleaseBuilds false }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }

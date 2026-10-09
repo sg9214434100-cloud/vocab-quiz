@@ -2,13 +2,13 @@ name: Build Android app
 on:
   push: { branches: [main] }
   workflow_dispatch:
-permissions: { contents: write }
+permissions: { contents: write, issues: write }
 jobs:
   apk:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: '17' }
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: '8.7' }
@@ -23,10 +23,18 @@ jobs:
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           VERSION_CODE: ${{ github.run_number }}
-        run: gradle -p android assembleRelease
+        run: gradle -p android assembleRelease --stacktrace 2>&1 | tee build.log; exit ${PIPESTATUS[0]}
+        shell: bash
       - name: Publish APK as a release
         env: { GH_TOKEN: '${{ github.token }}' }
         run: |
           cp android/app/build/outputs/apk/release/app-release.apk VocabQuiz.apk
           gh release delete latest --yes --cleanup-tag || true
           gh release create latest VocabQuiz.apk --title "Vocab Quiz (build ${{ github.run_number }})" --notes "Download VocabQuiz.apk on your Android phone and open it to install."
+      - name: Report build error
+        if: failure()
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          [ -f build.log ] || echo "No build log (failed before the build step)" > build.log
+          { echo '```'; grep -nE "FAILURE|What went wrong|error:|Error|Exception|Could not|> " build.log | head -80; echo '---- last lines ----'; tail -60 build.log; echo '```'; } > report.md
+          gh issue create --title "Android build ${{ github.run_number }} failed" --body-file report.md
