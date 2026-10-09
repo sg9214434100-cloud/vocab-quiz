@@ -103,6 +103,45 @@ input[type=search]{width:100%;font:15px var(--ui);color:var(--ink);background:va
 body{min-height:100vh}
 
 *{margin:0}p,h1{margin:0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+#pSearch{display:flex;flex-direction:column;gap:14px}
+#pSearch[hidden]{display:none!important}
+.sbar{display:flex;gap:8px;align-items:stretch}
+.sbox{position:relative;flex:1;min-width:0}
+.sbox input{width:100%;height:100%;font:18px var(--display);padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+.sugg{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;list-style:none;padding:4px;margin:0;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.sugg li button{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;background:none;border:0;padding:9px 10px;border-radius:6px;font:16px var(--display);color:var(--ink);cursor:pointer}
+.sugg li button:hover,.sugg li button:focus-visible{background:var(--paper)}
+.sugg .src{font:11px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.05em;align-self:center}
+.recent{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.recent .lbl{font:11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.chip{font:14px var(--ui);border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 11px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+#sResult{display:flex;flex-direction:column;gap:14px}
+.wordtop{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+.phon{font-family:var(--mono);font-size:14px;color:var(--muted)}
+.play{font:600 13px var(--ui);border:1px solid var(--line);background:var(--card);color:var(--accent);border-radius:999px;padding:4px 12px;cursor:pointer}
+.sense{display:flex;flex-direction:column;gap:8px}
+.sense h3{font:italic 18px var(--display);color:var(--muted);margin:0;border-top:1px solid var(--line);padding-top:12px}
+.defs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.defs label{display:grid;grid-template-columns:22px 1fr;gap:8px;cursor:pointer;align-items:start}
+.defs input{width:18px;height:18px;margin-top:4px;accent-color:var(--accent)}
+.defs .d{font:17px/1.45 var(--display)}
+.defs .e{display:block;font:italic 15px/1.45 var(--display);color:var(--muted);margin-top:2px}
+.syn{font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.field input{font:16px var(--ui);padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink)}
+.field input.deva{font-family:var(--deva)}
+.mine{border-color:var(--accent)}
+.mine .tag{color:var(--accent);border-color:var(--accent)}
+.paste summary{cursor:pointer;font:600 15px var(--ui);color:var(--ink)}
+.paste[open]{gap:12px}
+.paste:not([open]){padding:14px 20px}
+.hint .note{max-width:60ch}
+.linkw{background:none;border:0;padding:0;color:var(--ink);cursor:pointer;text-align:left}
+.linkw:hover{color:var(--accent)}
 </style></head><body>
 <div class="wrap">
   <header>
@@ -112,22 +151,32 @@ body{min-height:100vh}
     </div>
   </header>
   <nav role="tablist">
-    <button role="tab" aria-selected="true" data-tab="quiz">Quiz</button>
-    <button role="tab" aria-selected="false" data-tab="add">Add</button>
+    <button role="tab" aria-selected="true" data-tab="search">Search</button>
+    <button role="tab" aria-selected="false" data-tab="quiz">Quiz</button>
     <button role="tab" aria-selected="false" data-tab="list">Words</button>
     <button role="tab" aria-selected="false" data-tab="backup">Backup</button>
   </nav>
-  <section id="pQuiz"><div class="card" id="quizCard"><div class="empty">Loading…</div></div></section>
-  <section id="pAdd" hidden><div class="card">
-    <div><div class="head" style="font-size:26px">Add new words</div>
-    <p class="note">Paste one dictionary entry as copied (word on the first line, then its meaning, Hindi and example), or many words with one per line like <span style="font-family:var(--mono)">pernicious - harmful in a gradual way</span>. New words come up more often in your quizzes for the first week.</p></div>
+  <section id="pSearch">
+    <form class="sbar" id="sForm" autocomplete="off" role="search">
+      <label for="sq" class="vh">Look up a word</label>
+      <div class="sbox"><input type="search" id="sq" placeholder="Look up any English word" enterkeyhint="search" autocapitalize="off" spellcheck="false">
+        <ul class="sugg" id="sugg" hidden></ul></div>
+      <button class="btn primary" type="submit">Search</button>
+    </form>
+    <div class="recent" id="recent"></div>
+    <div id="sResult"><div class="card hint"><div class="head" style="font-size:24px">Look up a word</div>
+      <p class="note">Type any English word to see its meanings, pronunciation, examples, synonyms and Hindi meaning. Tap <b>Add to my words</b> and it joins your daily quiz. Looking up new words needs an internet connection; your own words work offline.</p></div></div>
+    <details class="card paste" id="pasteCard"><summary>Paste several words at once</summary>
+    <p class="note">Paste one dictionary entry as copied (word on the first line, then its meaning, Hindi and example), or many words with one per line like <span style="font-family:var(--mono)">pernicious - harmful in a gradual way</span>.</p>
     <label for="pasteBox" class="note" style="font-weight:500;color:var(--ink)">Words and meanings</label>
     <textarea id="pasteBox" placeholder="sanguine&#10;adjective&#10;optimistic, especially in a bad situation&#10;आशावादी&#10;She is sanguine about the future."></textarea>
-    <div class="actions"><button class="btn" id="clearBtn">Clear</button><button class="btn primary" id="readBtn">Read words</button></div>
+    <div class="actions"><button class="btn" id="clearBtn" type="button">Clear</button><button class="btn primary" id="readBtn" type="button">Read words</button></div>
     <div id="addMsg" hidden></div>
     <div id="previewWrap" hidden><ul class="preview" id="preview"></ul>
-      <div class="actions" style="margin-top:12px"><button class="btn" id="cancelAdd">Discard</button><button class="btn primary" id="saveAdd">Save words</button></div></div>
-  </div></section>
+      <div class="actions" style="margin-top:12px"><button class="btn" id="cancelAdd" type="button">Discard</button><button class="btn primary" id="saveAdd" type="button">Save words</button></div></div>
+    </details>
+  </section>
+  <section id="pQuiz" hidden><div class="card" id="quizCard"><div class="empty">Loading…</div></div></section>
   <section id="pList" hidden><div class="card">
     <label for="search" class="note">Search your words</label>
     <input type="search" id="search" placeholder="Type a word or meaning">
@@ -278,16 +327,146 @@ function renderList(){
   let arr=[...WORDS.values()].sort((a,b)=>(b.added||'').localeCompare(a.added||'')||a.w.localeCompare(b.w));
   if(q)arr=arr.filter(x=>(x.w+' '+x.en+' '+x.hi).toLowerCase().includes(q));
   $('listCount').textContent=arr.length+(arr.length===1?' word':' words')+(q?' match':'');
-  $('wordList').innerHTML=arr.slice(0,listLimit).map(x=>`<li><div class="top"><span class="w ${DEVA.test(x.w)?'deva':''}">${esc(x.w)}</span>${x.pos?`<span class="pos" style="font-size:14px">${esc(posAbbr(x.pos))}</span>`:''}${daysAgo(x.added)<=7?'<span class="tag new">new</span>':''}<span class="d">${esc(fmtDate(x.added))}</span></div><div class="m ${!x.en&&DEVA.test(x.hi)?'deva':''}">${esc(x.en||x.hi)}</div></li>`).join('')||'<li class="empty">No words match.</li>';
+  $('wordList').innerHTML=arr.slice(0,listLimit).map(x=>`<li><div class="top"><button type="button" class="w linkw ${DEVA.test(x.w)?'deva':''}" data-w="${esc(x.w)}">${esc(x.w)}</button>${x.pos?`<span class="pos" style="font-size:14px">${esc(posAbbr(x.pos))}</span>`:''}${daysAgo(x.added)<=7?'<span class="tag new">new</span>':''}<span class="d">${esc(fmtDate(x.added))}</span></div><div class="m ${!x.en&&DEVA.test(x.hi)?'deva':''}">${esc(x.en||x.hi)}</div></li>`).join('')||'<li class="empty">No words match.</li>';
   $('moreBtn').hidden=arr.length<=listLimit;
+  $('wordList').querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>lookup(b.dataset.w));
 }
 $('search').addEventListener('input',()=>{listLimit=60;renderList()});
 $('moreBtn').onclick=()=>{listLimit+=100;renderList()};
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
-  document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected',x===b));
-  for(const t of['quiz','add','list','backup'])$('p'+t[0].toUpperCase()+t.slice(1)).hidden=b.dataset.tab!==t;
-  if(b.dataset.tab==='list')renderList();if(b.dataset.tab==='backup')bkInfo();
+const TABS=['search','quiz','list','backup'];
+function showTab(name){
+  document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected',x.dataset.tab===name));
+  for(const t of TABS)$('p'+t[0].toUpperCase()+t.slice(1)).hidden=t!==name;
+  if(name==='list')renderList();if(name==='backup')bkInfo();
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+
+
+// ---------- dictionary search ----------
+let RECENT=LS.get('vq_recent',[]),lastEntry=null,lookupSeq=0;
+const POSFULL={n:'noun',v:'verb',adj:'adjective',adv:'adverb',u:''};
+async function getJSON(url,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms||9000);
+  try{const r=await fetch(url,{signal:c.signal});if(!r.ok){const e=new Error('http '+r.status);e.status=r.status;throw e}return await r.json()}finally{clearTimeout(t)}}
+function fromFreeDict(d){
+  if(!Array.isArray(d)||!d.length)return null;
+  const senses=new Map();let phon='',audio='';
+  for(const e of d){phon=phon||e.phonetic||'';for(const p of (e.phonetics||[])){phon=phon||p.text||'';if(!audio&&p.audio)audio=p.audio.startsWith('//')?'https:'+p.audio:p.audio}
+    for(const m of (e.meanings||[])){const pos=m.partOfSpeech||'';if(!senses.has(pos))senses.set(pos,{pos,defs:[],syn:new Set(),ant:new Set()});const S=senses.get(pos);
+      for(const x of (m.synonyms||[]))S.syn.add(x);for(const x of (m.antonyms||[]))S.ant.add(x);
+      for(const df of (m.definitions||[])){if(S.defs.length<5)S.defs.push({d:df.definition,ex:df.example||''});for(const x of (df.synonyms||[]))S.syn.add(x);for(const x of (df.antonyms||[]))S.ant.add(x)}}}
+  return{w:d[0].word,phon,audio,senses:[...senses.values()].map(S=>({pos:S.pos,defs:S.defs,syn:[...S.syn].slice(0,8),ant:[...S.ant].slice(0,6)}))};
+}
+function fromDatamuse(o){
+  const senses=new Map();
+  for(const raw of (o.defs||[])){const [p,...rest]=raw.split('\t');const pos=POSFULL[p]??p;if(!senses.has(pos))senses.set(pos,{pos,defs:[],syn:[],ant:[]});const S=senses.get(pos);if(S.defs.length<5)S.defs.push({d:rest.join(' '),ex:''})}
+  return{w:o.word,phon:'',audio:'',senses:[...senses.values()]};
+}
+function cleanTr(d,src,wantDeva){
+  const out=[];const push=t=>{t=String(t||'').trim().replace(/\s*[.।]$/,'');if(!t||t.length>60)return;if(wantDeva!==DEVA.test(t))return;if(t.toLowerCase()===src.toLowerCase())return;if(/MYMEMORY|QUERY LENGTH|INVALID/i.test(t))return;if(!out.includes(t))out.push(t)};
+  push(d&&d.responseData&&d.responseData.translatedText);
+  for(const m of ((d&&d.matches)||[]).slice(0,6))push(m.translation);
+  return out.slice(0,3).join(', ');
+}
+function translate(w,pair){return getJSON('https://api.mymemory.translated.net/get?q='+encodeURIComponent(w)+'&langpair='+pair,8000).then(d=>cleanTr(d,w,pair.endsWith('hi'))).catch(()=>'')}
+function mineCard(m){return `<div class="card mine"><div class="wordtop"><span class="tag">In your words</span><span class="small">noted ${esc(fmtDate(m.added))}</span></div>
+  <div class="wordtop"><span class="head ${DEVA.test(m.w)?'deva':''}" style="font-size:28px">${esc(m.w)}</span>${m.pos?`<span class="pos">${esc(posAbbr(m.pos))}</span>`:''}</div>
+  ${m.en?`<p class="def" style="font-size:18px">${esc(m.en)}</p>`:''}${m.hi?`<p class="deva" style="color:var(--muted)">${esc(m.hi)}</p>`:''}${m.ex?`<p class="note" style="font-style:italic;font-family:var(--display)">${esc(m.ex)}</p>`:''}</div>`}
+function resultCard(e,hi){
+  let first=true;
+  const senses=e.senses.map((S,si)=>`<div class="sense"><h3>${esc(S.pos||'meaning')}</h3><ol class="defs">${S.defs.map((df,di)=>{const c=first;first=false;
+      return `<li><label><input type="checkbox" data-s="${si}" data-d="${di}" ${c?'checked':''}><span><span class="d">${esc(df.d)}</span>${df.ex?`<span class="e">“${esc(df.ex)}”</span>`:''}</span></label></li>`}).join('')}</ol>
+    ${S.syn.length?`<div class="syn"><span>Similar:</span>${S.syn.map(x=>`<button class="chip" type="button" data-w="${esc(x)}">${esc(x)}</button>`).join('')}</div>`:''}
+    ${S.ant.length?`<div class="syn"><span>Opposite:</span>${S.ant.map(x=>`<button class="chip" type="button" data-w="${esc(x)}">${esc(x)}</button>`).join('')}</div>`:''}</div>`).join('');
+  const exists=WORDS.has(keyOf(e.w));
+  return `<div class="card" id="resCard"><div class="wordtop"><span class="head"><span>${esc(e.w)}</span></span>${e.phon?`<span class="phon">${esc(e.phon)}</span>`:''}${e.audio?`<button class="play" type="button" id="playBtn" data-a="${esc(e.audio)}">▶ Listen</button>`:''}</div>
+    ${senses}
+    <div class="field"><label for="hiIn">Hindi meaning ${hi?'(suggested, edit if needed)':'(optional)'}</label><input id="hiIn" class="deva" value="${esc(hi)}" placeholder="हिंदी अर्थ"></div>
+    <p class="small">Tick the meanings you want to keep. The first ticked one is used in quizzes.</p>
+    <div id="resMsg" hidden></div>
+    <div class="actions"><button class="btn primary" type="button" id="addRes">${exists?'Update in my words':'Add to my words'}</button></div></div>`;
+}
+function missCard(w,offline,sugg,en,hi){
+  const deva=DEVA.test(w);
+  return `<div class="card" id="resCard"><div class="head" style="font-size:26px">${esc(w)}</div>
+    <p class="note">${offline?'Couldn’t reach the online dictionary. Check your internet connection and search again, or add the word with your own meaning below.':deva?'Hindi words aren’t in the English dictionary. Add it with its meaning below.':'No dictionary entry found for this spelling.'}</p>
+    ${sugg.length?`<div class="syn"><span>Did you mean:</span>${sugg.map(x=>`<button class="chip" type="button" data-w="${esc(x)}">${esc(x)}</button>`).join('')}</div>`:''}
+    <div class="field"><label for="enIn">Meaning in English</label><input id="enIn" value="${esc(en||'')}" placeholder="What the word means"></div>
+    <div class="field"><label for="hiIn">Meaning in Hindi</label><input id="hiIn" class="deva" value="${esc(hi||'')}" placeholder="हिंदी अर्थ"></div>
+    <div class="field"><label for="exIn">Example sentence (optional)</label><input id="exIn" placeholder="A sentence using the word"></div>
+    <div id="resMsg" hidden></div>
+    <div class="actions"><button class="btn primary" type="button" id="addRes">Add to my words</button></div></div>`;
+}
+function saveWord(item){
+  const k=keyOf(item.w);const prev=WORDS.get(k);
+  item={...item,lang:DEVA.test(item.w)?'hi':'en',added:prev?prev.added:TODAY};item.q=quizMeaning(item);
+  const list=ADDED.filter(x=>keyOf(x.w)!==k);list.push(item);
+  if(!LS.set('vq_added',list))return false;
+  ADDED=list;loadWords();renderStats();if(!quiz)startToday();return !!prev?'updated':'added';
+}
+function wireResult(w){
+  const root=$('sResult');
+  root.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>lookup(b.dataset.w));
+  const pb=$('playBtn');if(pb)pb.onclick=()=>{try{new Audio(pb.dataset.a).play().catch(()=>{pb.textContent='Audio unavailable'})}catch(e){}};
+  const ab=$('addRes');if(!ab)return;
+  ab.onclick=()=>{
+    let item;
+    if(lastEntry){
+      const picks=[...root.querySelectorAll('.defs input:checked')].map(i=>({S:lastEntry.senses[+i.dataset.s],df:lastEntry.senses[+i.dataset.s].defs[+i.dataset.d]}));
+      if(!picks.length){showMsg($('resMsg'),'Tick at least one meaning to keep.','err');return}
+      const pos=[...new Set(picks.map(p=>p.S.pos).filter(Boolean))].join(', ');
+      const syn=[...new Set(picks.flatMap(p=>p.S.syn))].slice(0,8).join(', ');
+      item={w:lastEntry.w,pos,en:picks.map(p=>p.df.d).join(' ; '),hi:$('hiIn').value.trim(),ex:(picks.find(p=>p.df.ex)||{df:{}}).df.ex||'',syn};
+    }else{
+      const en=$('enIn').value.trim(),hi=$('hiIn').value.trim();
+      if(!en&&!hi){showMsg($('resMsg'),'Add a meaning in English or Hindi first.','err');return}
+      item={w:w,pos:'',en,hi,ex:$('exIn').value.trim(),syn:''};
+    }
+    const r=saveWord(item);
+    if(!r){showMsg($('resMsg'),'This browser is not letting the app save. Open it in Chrome or Edge, not in a private tab.','err');return}
+    showMsg($('resMsg'),r==='updated'?'Updated in your words.':'Added to your words. It will come up in your quizzes more often this week.','ok');
+    ab.textContent=r==='updated'?'Updated ✓':'Added ✓';ab.disabled=true;
+  };
+}
+async function lookup(raw){
+  const w=String(raw||'').trim().replace(/\s+/g,' ');if(!w)return;
+  showTab('search');$('sq').value=w;hideSug();$('sq').blur();
+  RECENT=[w,...RECENT.filter(x=>x.toLowerCase()!==w.toLowerCase())].slice(0,8);LS.set('vq_recent',RECENT);renderRecent();
+  const seq=++lookupSeq,out=$('sResult'),mine=WORDS.get(keyOf(w));
+  out.innerHTML=(mine?mineCard(mine):'')+`<div class="card"><div class="empty">Looking up “${esc(w)}”…</div></div>`;
+  window.scrollTo(0,0);
+  const deva=DEVA.test(w);
+  let entry=null,offline=false,notFound=false,sugg=[];
+  const trP=deva?translate(w,'hi|en'):translate(w,'en|hi');
+  if(!deva){
+    try{entry=fromFreeDict(await getJSON('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(w.toLowerCase())))}
+    catch(e){if(e.status===404)notFound=true;else offline=true}
+    if(!entry){try{const d=await getJSON('https://api.datamuse.com/words?sp='+encodeURIComponent(w.toLowerCase())+'&md=d&max=1',7000);
+        if(d[0]&&d[0].defs&&d[0].word.toLowerCase()===w.toLowerCase()){entry=fromDatamuse(d[0]);offline=false}else{offline=false;notFound=true}}catch(e){}}
+    if(!entry&&notFound){try{sugg=(await getJSON('https://api.datamuse.com/sug?s='+encodeURIComponent(w)+'&max=7',6000)).map(x=>x.word).filter(x=>x.toLowerCase()!==w.toLowerCase()).slice(0,6)}catch(e){}}
+  }
+  const tr=await trP;
+  if(seq!==lookupSeq)return;
+  lastEntry=entry;
+  out.innerHTML=(mine?mineCard(mine):'')+(entry?resultCard(entry,tr):missCard(w,offline,sugg,deva?tr:'',deva?'':tr));
+  wireResult(w);
+}
+function renderRecent(){
+  $('recent').innerHTML=RECENT.length?'<span class="lbl">Recent</span>'+RECENT.map(x=>`<button class="chip" type="button" data-w="${esc(x)}">${esc(x)}</button>`).join(''):'';
+  $('recent').querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>lookup(b.dataset.w));
+}
+function hideSug(){$('sugg').hidden=true}
+$('sq').addEventListener('input',()=>{
+  const q=$('sq').value.trim().toLowerCase();if(q.length<2){hideSug();return}
+  const hits=[...WORDS.values()].filter(x=>x.k.startsWith(q)).sort((a,b)=>a.k.length-b.k.length).slice(0,6);
+  if(!hits.length){hideSug();return}
+  $('sugg').innerHTML=hits.map(x=>`<li><button type="button" data-w="${esc(x.w)}"><span class="${DEVA.test(x.w)?'deva':''}">${esc(x.w)}</span><span class="src">in your words</span></button></li>`).join('');
+  $('sugg').hidden=false;
+  $('sugg').querySelectorAll('[data-w]').forEach(b=>b.onmousedown=e=>{e.preventDefault();lookup(b.dataset.w)});
 });
+$('sq').addEventListener('blur',()=>setTimeout(hideSug,150));
+$('sq').addEventListener('keydown',e=>{if(e.key==='Escape')hideSug()});
+$('sForm').onsubmit=e=>{e.preventDefault();lookup($('sq').value)};
+renderRecent();
 
 // ---------- adding ----------
 const POSRE=/^(noun|verb|adjective|adverb|preposition|conjunction|pronoun|exclamation|interjection|prefix|suffix|idiom|phrase|phrasal verb)s?\b[^a-z]*$/i;
