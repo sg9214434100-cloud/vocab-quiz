@@ -24,7 +24,12 @@ jobs:
           clean() { printf '%s' "$1" | sed -E 's/^[[:space:]]*(Value[^:]*:)?[[:space:]]*//' | tr -d '[:space:]'; }
           KSC=$(clean "$KS"); PWC=$(clean "$PW")
           printf '%s' "$KSC" | base64 -d > android/app/release.jks || true
-          echo "::add-mask::$PWC"; echo "KEYSTORE_PASSWORD=$PWC" >> "$GITHUB_ENV"
+          GOOD=""
+          for c in "$PWC" "${PWC:0:${#PWC}-1}" "${PWC:1}" "$(printf '%s' "$PWC" | tr -d '"'"'"'\\`.,;')"; do
+            if [ -n "$c" ] && keytool -list -keystore android/app/release.jks -storepass "$c" >/dev/null 2>&1; then GOOD="$c"; break; fi
+          done
+          [ -n "$GOOD" ] || { echo "::error::The KEYSTORE_PASSWORD secret does not open the signing key."; GOOD="$PWC"; }
+          echo "::add-mask::$GOOD"; echo "KEYSTORE_PASSWORD=$GOOD" >> "$GITHUB_ENV"; PWC="$GOOD"
           echo "keystore_base64_chars=${#KSC} (expected 3432) keystore_bytes=$(stat -c%s android/app/release.jks) (expected 2574) password_chars=${#PWC} (expected 24)" | tee secrets-check.txt
       - name: Build APK
         env:
