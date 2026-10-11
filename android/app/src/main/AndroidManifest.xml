@@ -10,5 +10,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".GoogleActivity" android:exported="false"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
     </application>
+    <queries>
+        <intent><action android:name="android.speech.action.RECOGNIZE_SPEECH" /></intent>
+    </queries>
 </manifest>

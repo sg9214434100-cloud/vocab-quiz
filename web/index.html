@@ -140,6 +140,13 @@ body{min-height:100vh}
 .paste[open]{gap:12px}
 .paste:not([open]){padding:14px 20px}
 .hint .note{max-width:60ch}
+.sbox input{padding-right:46px}
+.mic{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;border:0;background:none;color:var(--accent);display:grid;place-items:center;cursor:pointer}
+.mic:hover{background:var(--paper)}
+.mic.on{background:var(--badbg);color:var(--bad);animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 6px var(--badbg)}}
+.gbtn{font:600 13px var(--ui);border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+html.isApp .webOnly,html:not(.isApp) .appOnly{display:none}
 .linkw{background:none;border:0;padding:0;color:var(--ink);cursor:pointer;text-align:left}
 .linkw:hover{color:var(--accent)}
 </style></head><body>
@@ -158,14 +165,15 @@ body{min-height:100vh}
   </nav>
   <section id="pSearch">
     <form class="sbar" id="sForm" autocomplete="off" role="search">
-      <label for="sq" class="vh">Look up a word</label>
-      <div class="sbox"><input type="search" id="sq" placeholder="Look up any English word" enterkeyhint="search" autocapitalize="off" spellcheck="false">
+      <label for="sq" class="vh">Search Google for a word or phrase</label>
+      <div class="sbox"><input type="search" id="sq" placeholder="Search Google for a word or phrase" enterkeyhint="search" autocapitalize="off" spellcheck="false">
+        <button class="mic" type="button" id="micBtn" aria-label="Search by voice" title="Search by voice" hidden><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg></button>
         <ul class="sugg" id="sugg" hidden></ul></div>
-      <button class="btn primary" type="submit">Search</button>
+      <button class="btn primary" type="submit" aria-label="Search">Search</button>
     </form>
     <div class="recent" id="recent"></div>
-    <div id="sResult"><div class="card hint"><div class="head" style="font-size:24px">Look up a word</div>
-      <p class="note">Type any English word to see its meanings, pronunciation, examples, synonyms and Hindi meaning. Tap <b>Add to my words</b> and it joins your daily quiz. Looking up new words needs an internet connection; your own words work offline.</p></div></div>
+    <div id="sResult"><div class="card hint"><div class="head" style="font-size:24px">Search a word or phrase</div>
+      <p class="note">Type it, or tap the microphone and say it. Google’s results open<span class="appOnly"> inside the app</span><span class="webOnly"> in a new tab</span>, and the meaning, Hindi and examples also appear here. Tap <b>Add to my words</b> to put it in your daily quiz. Searching needs an internet connection; your own words work offline.</p></div></div>
     <details class="card paste" id="pasteCard"><summary>Paste several words at once</summary>
     <p class="note">Paste one dictionary entry as copied (word on the first line, then its meaning, Hindi and example), or many words with one per line like <span style="font-family:var(--mono)">pernicious - harmful in a gradual way</span>.</p>
     <label for="pasteBox" class="note" style="font-weight:500;color:var(--ink)">Words and meanings</label>
@@ -378,7 +386,7 @@ function resultCard(e,hi){
     ${S.syn.length?`<div class="syn"><span>Similar:</span>${S.syn.map(x=>`<button class="chip" type="button" data-w="${esc(x)}">${esc(x)}</button>`).join('')}</div>`:''}
     ${S.ant.length?`<div class="syn"><span>Opposite:</span>${S.ant.map(x=>`<button class="chip" type="button" data-w="${esc(x)}">${esc(x)}</button>`).join('')}</div>`:''}</div>`).join('');
   const exists=WORDS.has(keyOf(e.w));
-  return `<div class="card" id="resCard"><div class="wordtop"><span class="head"><span>${esc(e.w)}</span></span>${e.phon?`<span class="phon">${esc(e.phon)}</span>`:''}${e.audio?`<button class="play" type="button" id="playBtn" data-a="${esc(e.audio)}">▶ Listen</button>`:''}</div>
+  return `<div class="card" id="resCard"><div class="wordtop"><span class="head"><span>${esc(e.w)}</span></span>${e.phon?`<span class="phon">${esc(e.phon)}</span>`:''}${e.audio?`<button class="play" type="button" id="playBtn" data-a="${esc(e.audio)}">▶ Listen</button>`:''}<button class="gbtn" type="button" data-g="${esc(e.w)}">Google ↗</button></div>
     ${senses}
     <div class="field"><label for="hiIn">Hindi meaning ${hi?'(suggested, edit if needed)':'(optional)'}</label><input id="hiIn" class="deva" value="${esc(hi)}" placeholder="हिंदी अर्थ"></div>
     <p class="small">Tick the meanings you want to keep. The first ticked one is used in quizzes.</p>
@@ -387,8 +395,8 @@ function resultCard(e,hi){
 }
 function missCard(w,offline,sugg,en,hi){
   const deva=DEVA.test(w);
-  return `<div class="card" id="resCard"><div class="head" style="font-size:26px">${esc(w)}</div>
-    <p class="note">${offline?'Couldn’t reach the online dictionary. Check your internet connection and search again, or add the word with your own meaning below.':deva?'Hindi words aren’t in the English dictionary. Add it with its meaning below.':'No dictionary entry found for this spelling.'}</p>
+  return `<div class="card" id="resCard"><div class="wordtop"><div class="head" style="font-size:26px">${esc(w)}</div><button class="gbtn" type="button" data-g="${esc(w)}">Google ↗</button></div>
+    <p class="note">${offline?'Couldn’t reach the online dictionary. Check your internet connection and search again, or add the word with your own meaning below.':deva?'Hindi words aren’t in the English dictionary. Add it with its meaning below.':'No dictionary meaning found automatically. Check Google’s results and type the meaning below.'}</p>
     ${sugg.length?`<div class="syn"><span>Did you mean:</span>${sugg.map(x=>`<button class="chip" type="button" data-w="${esc(x)}">${esc(x)}</button>`).join('')}</div>`:''}
     <div class="field"><label for="enIn">Meaning in English</label><input id="enIn" value="${esc(en||'')}" placeholder="What the word means"></div>
     <div class="field"><label for="hiIn">Meaning in Hindi</label><input id="hiIn" class="deva" value="${esc(hi||'')}" placeholder="हिंदी अर्थ"></div>
@@ -406,6 +414,7 @@ function saveWord(item){
 function wireResult(w){
   const root=$('sResult');
   root.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>lookup(b.dataset.w));
+  root.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{if(isApp){try{AndroidBridge.openGoogle(b.dataset.g)}catch(e){}}else window.open(gURL(b.dataset.g),'_blank','noopener')});
   const pb=$('playBtn');if(pb)pb.onclick=()=>{try{new Audio(pb.dataset.a).play().catch(()=>{pb.textContent='Audio unavailable'})}catch(e){}};
   const ab=$('addRes');if(!ab)return;
   ab.onclick=()=>{
@@ -427,7 +436,8 @@ function wireResult(w){
     ab.textContent=r==='updated'?'Updated ✓':'Added ✓';ab.disabled=true;
   };
 }
-async function lookup(raw){
+async function lookup(raw,opts){
+  opts=opts||{};
   const w=String(raw||'').trim().replace(/\s+/g,' ');if(!w)return;
   showTab('search');$('sq').value=w;hideSug();$('sq').blur();
   RECENT=[w,...RECENT.filter(x=>x.toLowerCase()!==w.toLowerCase())].slice(0,8);LS.set('vq_recent',RECENT);renderRecent();
@@ -440,6 +450,7 @@ async function lookup(raw){
   if(!deva){
     try{entry=fromFreeDict(await getJSON('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(w.toLowerCase())))}
     catch(e){if(e.status===404)notFound=true;else offline=true}
+    if(!entry){try{entry=fromWiktionary(w,await getJSON('https://en.wiktionary.org/api/rest_v1/page/definition/'+encodeURIComponent(w.replace(/ /g,'_')),8000));if(entry){offline=false;notFound=false}}catch(e){if(e.status===404)notFound=true}}
     if(!entry){try{const d=await getJSON('https://api.datamuse.com/words?sp='+encodeURIComponent(w.toLowerCase())+'&md=d&max=1',7000);
         if(d[0]&&d[0].defs&&d[0].word.toLowerCase()===w.toLowerCase()){entry=fromDatamuse(d[0]);offline=false}else{offline=false;notFound=true}}catch(e){}}
     if(!entry&&notFound){try{sugg=(await getJSON('https://api.datamuse.com/sug?s='+encodeURIComponent(w)+'&max=7',6000)).map(x=>x.word).filter(x=>x.toLowerCase()!==w.toLowerCase()).slice(0,6)}catch(e){}}
@@ -449,7 +460,45 @@ async function lookup(raw){
   lastEntry=entry;
   out.innerHTML=(mine?mineCard(mine):'')+(entry?resultCard(entry,tr):missCard(w,offline,sugg,deva?tr:'',deva?'':tr));
   wireResult(w);
+  if(opts.autoAdd){
+    const ab=$('addRes');
+    if(entry||($('enIn')&&$('enIn').value.trim())||($('hiIn')&&$('hiIn').value.trim())){ab.click()}
+    else showMsg($('resMsg'),'No meaning was found automatically. Type the meaning from Google above, then tap Add to my words.','err');
+    if($('resCard'))$('resCard').scrollIntoView({block:'start'});
+  }
 }
+function fromWiktionary(w,d){
+  const strip=h=>{const t=document.createElement('div');t.innerHTML=String(h||'');return t.textContent.replace(/\s+/g,' ').trim()};
+  const list=(d&&d.en)||[];if(!list.length)return null;
+  const senses=list.map(x=>({pos:(x.partOfSpeech||'').toLowerCase(),defs:(x.definitions||[]).map(df=>({d:strip(df.definition),ex:strip((df.examples||[])[0]||'')})).filter(df=>df.d).slice(0,5),syn:[],ant:[]})).filter(S=>S.defs.length);
+  return senses.length?{w:w,phon:'',audio:'',senses}:null;
+}
+// ---------- Google search + voice ----------
+const isApp=!!window.AndroidBridge;
+if(isApp)document.documentElement.classList.add('isApp');
+const gURL=q=>'https://www.google.com/search?q='+encodeURIComponent(q.trim()+' meaning');
+function googleSearch(q){
+  q=String(q||'').trim();if(!q)return;
+  if(isApp){try{AndroidBridge.openGoogle(q);}catch(e){}}
+  else{try{window.open(gURL(q),'_blank','noopener')}catch(e){}}
+  lookup(q);
+}
+window.addFromGoogle=q=>{q=String(q||'').replace(/\s+(meaning|definition|in hindi|meaning in hindi)$/i,'').replace(/^(define|meaning of)\s+/i,'').trim();if(q)lookup(q,{autoAdd:true})};
+window.onVoiceResult=t=>{const mb=$('micBtn');mb.classList.remove('on');t=String(t||'').trim();if(t){$('sq').value=t;googleSearch(t)}};
+(function setupVoice(){
+  const mb=$('micBtn');const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(isApp&&AndroidBridge.startVoice){mb.hidden=false;mb.onclick=()=>{mb.classList.add('on');try{AndroidBridge.startVoice()}catch(e){mb.classList.remove('on')}};return}
+  if(!SR)return;
+  mb.hidden=false;let rec=null;
+  mb.onclick=()=>{
+    if(rec){rec.stop();return}
+    rec=new SR();rec.lang='en-IN';rec.interimResults=true;rec.maxAlternatives=1;
+    rec.onresult=e=>{const r=e.results[e.results.length-1];$('sq').value=r[0].transcript;if(r.isFinal){const t=r[0].transcript;rec.stop();window.onVoiceResult(t)}};
+    rec.onerror=e=>{mb.classList.remove('on');if(e.error==='not-allowed')$('sq').placeholder='Allow microphone access to search by voice'};
+    rec.onend=()=>{mb.classList.remove('on');rec=null};
+    mb.classList.add('on');try{rec.start()}catch(e){mb.classList.remove('on');rec=null}
+  };
+})();
 function renderRecent(){
   $('recent').innerHTML=RECENT.length?'<span class="lbl">Recent</span>'+RECENT.map(x=>`<button class="chip" type="button" data-w="${esc(x)}">${esc(x)}</button>`).join(''):'';
   $('recent').querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>lookup(b.dataset.w));
@@ -465,7 +514,7 @@ $('sq').addEventListener('input',()=>{
 });
 $('sq').addEventListener('blur',()=>setTimeout(hideSug,150));
 $('sq').addEventListener('keydown',e=>{if(e.key==='Escape')hideSug()});
-$('sForm').onsubmit=e=>{e.preventDefault();lookup($('sq').value)};
+$('sForm').onsubmit=e=>{e.preventDefault();googleSearch($('sq').value)};
 renderRecent();
 
 // ---------- adding ----------

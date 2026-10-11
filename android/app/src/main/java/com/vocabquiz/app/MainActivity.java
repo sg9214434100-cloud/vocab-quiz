@@ -8,6 +8,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.speech.RecognizerIntent;
+import org.json.JSONObject;
+import java.util.ArrayList;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -24,6 +27,8 @@ public class MainActivity extends Activity {
     private WebView web;
     private ValueCallback<Uri[]> fileCallback;
     private static final int PICK_FILE = 42;
+    private static final int VOICE = 43;
+    private static final int GOOGLE = 44;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,8 +64,26 @@ public class MainActivity extends Activity {
         else web.loadUrl("file:///android_asset/index.html");
     }
 
+    private void callJs(String fn, String arg) {
+        String js = "window." + fn + "&&window." + fn + "(" + JSONObject.quote(arg == null ? "" : arg) + ")";
+        runOnUiThread(() -> web.evaluateJavascript(js, null));
+    }
+
     @Override
     protected void onActivityResult(int req, int res, Intent data) {
+        if (req == VOICE) {
+            String text = "";
+            if (res == RESULT_OK && data != null) {
+                ArrayList<String> r = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                if (r != null && !r.isEmpty()) text = r.get(0);
+            }
+            callJs("onVoiceResult", text);
+            return;
+        }
+        if (req == GOOGLE) {
+            if (res == RESULT_OK && data != null) callJs("addFromGoogle", data.getStringExtra(GoogleActivity.EXTRA_QUERY));
+            return;
+        }
         if (req == PICK_FILE && fileCallback != null) {
             Uri[] r = (res == RESULT_OK && data != null && data.getData() != null) ? new Uri[]{data.getData()} : null;
             fileCallback.onReceiveValue(r);
@@ -74,6 +97,30 @@ public class MainActivity extends Activity {
     public void onBackPressed() { if (web.canGoBack()) web.goBack(); else super.onBackPressed(); }
 
     class Bridge {
+        @JavascriptInterface
+        public void openGoogle(String q) {
+            runOnUiThread(() -> {
+                Intent i = new Intent(MainActivity.this, GoogleActivity.class);
+                i.putExtra(GoogleActivity.EXTRA_QUERY, q);
+                startActivityForResult(i, GOOGLE);
+            });
+        }
+
+        @JavascriptInterface
+        public void startVoice() {
+            runOnUiThread(() -> {
+                Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN");
+                i.putExtra(RecognizerIntent.EXTRA_PROMPT, "Say a word or phrase");
+                try { startActivityForResult(i, VOICE); }
+                catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "Voice search needs the Google app on this phone", Toast.LENGTH_LONG).show();
+                    callJs("onVoiceResult", "");
+                }
+            });
+        }
+
         @JavascriptInterface
         public void saveFile(String name, String text, String mime) {
             try {
