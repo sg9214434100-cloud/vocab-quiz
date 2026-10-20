@@ -146,6 +146,18 @@ body{min-height:100vh}
 .mic.on{background:var(--badbg);color:var(--bad);animation:pulse 1.2s ease-in-out infinite}
 @keyframes pulse{50%{box-shadow:0 0 0 6px var(--badbg)}}
 .gbtn{font:600 13px var(--ui);border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+#pAdd{display:flex;flex-direction:column;gap:14px}
+#pAdd[hidden]{display:none!important}
+.field textarea{min-height:0}
+.field textarea,.field select{font:16px var(--ui);padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);resize:vertical}
+.field textarea.deva{font-family:var(--deva)}
+.rowbtns{display:flex;gap:8px;margin-left:auto}
+.mini{font:500 12px var(--ui);border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:6px;padding:3px 9px;cursor:pointer}
+.mini:hover{color:var(--ink);border-color:var(--accent)}
+.mini.danger{color:var(--bad);border-color:var(--bad)}
+.tag.own{color:var(--accent);border-color:var(--accent)}
+nav{overflow-x:auto;scrollbar-width:none}
+nav button{flex:none}
 html.isApp .webOnly,html:not(.isApp) .appOnly{display:none}
 .linkw{background:none;border:0;padding:0;color:var(--ink);cursor:pointer;text-align:left}
 .linkw:hover{color:var(--accent)}
@@ -159,6 +171,7 @@ html.isApp .webOnly,html:not(.isApp) .appOnly{display:none}
   </header>
   <nav role="tablist">
     <button role="tab" aria-selected="true" data-tab="search">Search</button>
+    <button role="tab" aria-selected="false" data-tab="add">Add</button>
     <button role="tab" aria-selected="false" data-tab="quiz">Quiz</button>
     <button role="tab" aria-selected="false" data-tab="list">Words</button>
     <button role="tab" aria-selected="false" data-tab="backup">Backup</button>
@@ -174,6 +187,26 @@ html.isApp .webOnly,html:not(.isApp) .appOnly{display:none}
     <div class="recent" id="recent"></div>
     <div id="sResult"><div class="card hint"><div class="head" style="font-size:24px">Search a word or phrase</div>
       <p class="note">Type it, or tap the microphone and say it. Google’s results open<span class="appOnly"> inside the app</span><span class="webOnly"> in a new tab</span>, and the meaning, Hindi and examples also appear here. Tap <b>Add to my words</b> to put it in your daily quiz. Searching needs an internet connection; your own words work offline.</p></div></div>
+  </section>
+  <section id="pAdd" hidden>
+    <form class="card" id="ownForm" autocomplete="off">
+      <div><div class="head" style="font-size:26px" id="ownTitle">Add your own word</div>
+      <p class="note">For words and phrases you can’t find on Google: family or regional sayings, slang, terms from your work, or anything you’ve made up. Give it a meaning in English or Hindi (or both) and it joins your daily quiz.</p></div>
+      <div class="field"><label for="oW">Word or phrase *</label><input id="oW" required placeholder="e.g. hawa khwah"></div>
+      <div class="field"><label for="oEn">Meaning in English</label><textarea id="oEn" rows="2" placeholder="What it means"></textarea></div>
+      <div class="field"><label for="oHi">Meaning in Hindi</label><textarea id="oHi" rows="2" class="deva" placeholder="हिंदी अर्थ"></textarea></div>
+      <div class="field"><label for="oPos">Type of word</label>
+        <select id="oPos"><option value="">Not sure</option><option>noun</option><option>verb</option><option>adjective</option><option>adverb</option><option>phrase</option><option>idiom</option><option>slang</option><option>saying</option></select></div>
+      <div class="field"><label for="oEx">Example sentence</label><input id="oEx" placeholder="A sentence using it"></div>
+      <div class="field"><label for="oSyn">Similar words</label><input id="oSyn" placeholder="Comma-separated, optional"></div>
+      <div class="field"><label for="oNote">Where it’s from</label><input id="oNote" placeholder="e.g. Nani’s saying, office jargon, a book (optional)"></div>
+      <div id="ownMsg" hidden></div>
+      <div class="actions"><button class="btn" type="button" id="ownCancel" hidden>Cancel editing</button><button class="btn primary" type="submit" id="ownSave">Add to my words</button></div>
+    </form>
+    <div class="card">
+      <div class="head" style="font-size:22px">Your own words</div>
+      <ul class="wl" id="ownList"></ul>
+    </div>
     <details class="card paste" id="pasteCard"><summary>Paste several words at once</summary>
     <p class="note">Paste one dictionary entry as copied (word on the first line, then its meaning, Hindi and example), or many words with one per line like <span style="font-family:var(--mono)">pernicious - harmful in a gradual way</span>.</p>
     <label for="pasteBox" class="note" style="font-weight:500;color:var(--ink)">Words and meanings</label>
@@ -258,7 +291,9 @@ function wordStats(){
   return{wrong,seenRecent};
 }
 function pickOptions(item,type,pool,r){
-  const same=pool.filter(x=>x.k!==item.k&&x.lang===item.lang&&x.q&&x.q!==item.q);
+  const qd=DEVA.test(item.q);
+  let same=pool.filter(x=>x.k!==item.k&&x.lang===item.lang&&x.q&&x.q!==item.q);
+  if(type==='m'){const m=same.filter(x=>DEVA.test(x.q)===qd);if(m.length>=3)same=m}
   const p0=(item.pos||'').split(/[ ,/]/)[0];
   const pref=shuffle(same.filter(x=>p0&&(x.pos||'').startsWith(p0)),r),rest=shuffle(same.filter(x=>!pref.includes(x)),r);
   const out=[],seen=new Set([type==='m'?item.q:item.w.toLowerCase()]);
@@ -335,17 +370,17 @@ function renderList(){
   let arr=[...WORDS.values()].sort((a,b)=>(b.added||'').localeCompare(a.added||'')||a.w.localeCompare(b.w));
   if(q)arr=arr.filter(x=>(x.w+' '+x.en+' '+x.hi).toLowerCase().includes(q));
   $('listCount').textContent=arr.length+(arr.length===1?' word':' words')+(q?' match':'');
-  $('wordList').innerHTML=arr.slice(0,listLimit).map(x=>`<li><div class="top"><button type="button" class="w linkw ${DEVA.test(x.w)?'deva':''}" data-w="${esc(x.w)}">${esc(x.w)}</button>${x.pos?`<span class="pos" style="font-size:14px">${esc(posAbbr(x.pos))}</span>`:''}${daysAgo(x.added)<=7?'<span class="tag new">new</span>':''}<span class="d">${esc(fmtDate(x.added))}</span></div><div class="m ${!x.en&&DEVA.test(x.hi)?'deva':''}">${esc(x.en||x.hi)}</div></li>`).join('')||'<li class="empty">No words match.</li>';
+  $('wordList').innerHTML=arr.slice(0,listLimit).map(x=>`<li><div class="top"><button type="button" class="w linkw ${DEVA.test(x.w)?'deva':''}" data-w="${esc(x.w)}">${esc(x.w)}</button>${x.pos?`<span class="pos" style="font-size:14px">${esc(posAbbr(x.pos))}</span>`:''}${x.src==='own'?'<span class="tag own">your own</span>':''}${daysAgo(x.added)<=7?'<span class="tag new">new</span>':''}<span class="d">${esc(fmtDate(x.added))}</span></div><div class="m ${!x.en&&DEVA.test(x.hi)?'deva':''}">${esc(x.en||x.hi)}</div></li>`).join('')||'<li class="empty">No words match.</li>';
   $('moreBtn').hidden=arr.length<=listLimit;
   $('wordList').querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>lookup(b.dataset.w));
 }
 $('search').addEventListener('input',()=>{listLimit=60;renderList()});
 $('moreBtn').onclick=()=>{listLimit+=100;renderList()};
-const TABS=['search','quiz','list','backup'];
+const TABS=['search','add','quiz','list','backup'];
 function showTab(name){
   document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected',x.dataset.tab===name));
   for(const t of TABS)$('p'+t[0].toUpperCase()+t.slice(1)).hidden=t!==name;
-  if(name==='list')renderList();if(name==='backup')bkInfo();
+  if(name==='list')renderList();if(name==='backup')bkInfo();if(name==='add')renderOwn();
 }
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 
@@ -516,6 +551,49 @@ $('sq').addEventListener('blur',()=>setTimeout(hideSug,150));
 $('sq').addEventListener('keydown',e=>{if(e.key==='Escape')hideSug()});
 $('sForm').onsubmit=e=>{e.preventDefault();googleSearch($('sq').value)};
 renderRecent();
+
+// ---------- own words ----------
+let editingKey=null,delArm=null;
+function ownWords(){return ADDED.filter(x=>x.src==='own').sort((a,b)=>(b.added||'').localeCompare(a.added||'')||a.w.localeCompare(b.w))}
+function renderOwn(){
+  const list=ownWords();
+  $('ownList').innerHTML=list.length?list.map(x=>`<li><div class="top"><span class="w ${DEVA.test(x.w)?'deva':''}">${esc(x.w)}</span>${x.pos?`<span class="pos" style="font-size:14px">${esc(posAbbr(x.pos))}</span>`:''}<span class="rowbtns"><button class="mini" type="button" data-edit="${esc(keyOf(x.w))}">Edit</button><button class="mini" type="button" data-del="${esc(keyOf(x.w))}">Delete</button></span></div>
+    ${x.en?`<div class="m">${esc(x.en)}</div>`:''}${x.hi?`<div class="m deva">${esc(x.hi)}</div>`:''}${x.ex?`<div class="m" style="font-style:italic;font-family:var(--display)">${esc(x.ex)}</div>`:''}${x.note?`<div class="small">From: ${esc(x.note)}</div>`:''}</li>`).join('')
+    :'<li class="empty">Words you add here will be listed here, where you can edit or delete them.</li>';
+  $('ownList').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>startEdit(b.dataset.edit));
+  $('ownList').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
+    const k=b.dataset.del;
+    if(delArm!==k){delArm=k;renderOwn();const nb=$('ownList').querySelector(`[data-del="${CSS.escape(k)}"]`);if(nb){nb.textContent='Tap again to delete';nb.classList.add('danger')}setTimeout(()=>{if(delArm===k){delArm=null;renderOwn()}},4000);return}
+    delArm=null;const list=ADDED.filter(x=>keyOf(x.w)!==k);LS.set('vq_added',list);ADDED=list;loadWords();renderStats();
+    if(editingKey===k)resetOwn();renderOwn();showMsg($('ownMsg'),'Deleted.','ok');
+  });
+}
+function resetOwn(){editingKey=null;$('ownForm').reset();$('ownTitle').textContent='Add your own word';$('ownSave').textContent='Add to my words';$('ownCancel').hidden=true}
+function startEdit(k){
+  const x=ADDED.find(y=>keyOf(y.w)===k);if(!x)return;editingKey=k;
+  $('oW').value=x.w;$('oEn').value=x.en||'';$('oHi').value=x.hi||'';$('oPos').value=x.pos||'';$('oEx').value=x.ex||'';$('oSyn').value=x.syn||'';$('oNote').value=x.note||'';
+  $('ownTitle').textContent='Edit '+x.w;$('ownSave').textContent='Save changes';$('ownCancel').hidden=false;showMsg($('ownMsg'),'');
+  $('ownForm').scrollIntoView({block:'start'});$('oEn').focus();
+}
+$('ownCancel').onclick=()=>{resetOwn();showMsg($('ownMsg'),'')};
+$('ownForm').onsubmit=e=>{
+  e.preventDefault();
+  const w=$('oW').value.trim().replace(/\s+/g,' '),en=$('oEn').value.trim(),hi=$('oHi').value.trim();
+  if(!w){showMsg($('ownMsg'),'Type the word or phrase first.','err');$('oW').focus();return}
+  if(!en&&!hi){showMsg($('ownMsg'),'Add a meaning in English or Hindi so it can appear in your quiz.','err');$('oEn').focus();return}
+  const k=keyOf(w);
+  if(!editingKey&&WORDS.has(k)){const ex=WORDS.get(k);if(!$('ownSave').dataset.confirm){$('ownSave').dataset.confirm='1';$('ownSave').textContent='Replace existing meaning';showMsg($('ownMsg'),'“'+ex.w+'” is already in your words'+(ex.en?' as: '+ex.en.split(' ; ')[0]:'')+'. Tap again to replace it with this meaning.','err');return}}
+  delete $('ownSave').dataset.confirm;
+  if(editingKey&&editingKey!==k){ADDED=ADDED.filter(x=>keyOf(x.w)!==editingKey)}
+  const prevAdded=(ADDED.find(x=>keyOf(x.w)===(editingKey||k))||{}).added;
+  const item={w,pos:$('oPos').value,en,hi,ex:$('oEx').value.trim(),syn:$('oSyn').value.trim(),note:$('oNote').value.trim(),src:'own'};
+  const r=saveWord(item);
+  if(!r){showMsg($('ownMsg'),'This browser is not letting the app save. Open it in Chrome or Edge, not in a private tab.','err');return}
+  if(prevAdded){const it=ADDED.find(x=>keyOf(x.w)===k);if(it){it.added=prevAdded;LS.set('vq_added',ADDED);loadWords()}}
+  const wasEdit=!!editingKey;resetOwn();renderOwn();
+  showMsg($('ownMsg'),wasEdit?'Saved changes to “'+w+'”.':'Added “'+w+'” to your words. It will come up in your quizzes more often this week.','ok');
+};
+['oW','oEn','oHi'].forEach(id=>$(id).addEventListener('input',()=>{if($('ownSave').dataset.confirm){delete $('ownSave').dataset.confirm;$('ownSave').textContent=editingKey?'Save changes':'Add to my words';showMsg($('ownMsg'),'')}}));
 
 // ---------- adding ----------
 const POSRE=/^(noun|verb|adjective|adverb|preposition|conjunction|pronoun|exclamation|interjection|prefix|suffix|idiom|phrase|phrasal verb)s?\b[^a-z]*$/i;
