@@ -140,6 +140,11 @@ body{min-height:100vh}
 .paste[open]{gap:12px}
 .paste:not([open]){padding:14px 20px}
 .hint .note{max-width:60ch}
+#pBackup:not([hidden]){display:block}
+.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.sel{font-family:var(--mono);user-select:all}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font:inherit;text-decoration:underline;cursor:pointer}
+.sites{border-top:1px solid var(--line);padding-top:12px}
 .sbox input{padding-right:46px}
 .mic{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;border:0;background:none;color:var(--accent);display:grid;place-items:center;cursor:pointer}
 .mic:hover{background:var(--paper)}
@@ -174,19 +179,19 @@ html.isApp .webOnly,html:not(.isApp) .appOnly{display:none}
     <button role="tab" aria-selected="false" data-tab="add">Add</button>
     <button role="tab" aria-selected="false" data-tab="quiz">Quiz</button>
     <button role="tab" aria-selected="false" data-tab="list">Words</button>
-    <button role="tab" aria-selected="false" data-tab="backup">Backup</button>
+    <button role="tab" aria-selected="false" data-tab="backup">More</button>
   </nav>
   <section id="pSearch">
     <form class="sbar" id="sForm" autocomplete="off" role="search">
-      <label for="sq" class="vh">Search Google for a word or phrase</label>
-      <div class="sbox"><input type="search" id="sq" placeholder="Search Google for a word or phrase" enterkeyhint="search" autocapitalize="off" spellcheck="false">
+      <label for="sq" class="vh">Look up a word or phrase</label>
+      <div class="sbox"><input type="search" id="sq" placeholder="Look up a word or phrase" enterkeyhint="search" autocapitalize="off" spellcheck="false">
         <button class="mic" type="button" id="micBtn" aria-label="Search by voice" title="Search by voice" hidden><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg></button>
         <ul class="sugg" id="sugg" hidden></ul></div>
       <button class="btn primary" type="submit" aria-label="Search">Search</button>
     </form>
     <div class="recent" id="recent"></div>
-    <div id="sResult"><div class="card hint"><div class="head" style="font-size:24px">Search a word or phrase</div>
-      <p class="note">Type it, or tap the microphone and say it. Google’s results open<span class="appOnly"> inside the app</span><span class="webOnly"> in a new tab</span>, and the meaning, Hindi and examples also appear here. Tap <b>Add to my words</b> to put it in your daily quiz. Searching needs an internet connection; your own words work offline.</p></div></div>
+    <div id="sResult"><div class="card hint"><div class="head" style="font-size:24px">Look up a word or phrase</div>
+      <p class="note">Type it, or tap the microphone and say it. You’ll see its meanings, pronunciation, examples and a Hindi meaning, with one-tap links to the full entry in Merriam-Webster, Cambridge and Oxford Learner’s. Tap <b>Add to my words</b> to put it in your daily quiz. Looking up needs an internet connection; your own words work offline.</p></div></div>
   </section>
   <section id="pAdd" hidden>
     <form class="card" id="ownForm" autocomplete="off">
@@ -224,7 +229,14 @@ html.isApp .webOnly,html:not(.isApp) .appOnly{display:none}
     <div class="note" id="listCount"></div><ul class="wl" id="wordList"></ul>
     <div class="actions"><button class="btn" id="moreBtn" hidden>Show more</button></div>
   </div></section>
-  <section id="pBackup" hidden><div class="card">
+  <section id="pBackup" hidden><div class="card" id="mwCard">
+    <div><div class="head" style="font-size:26px">Merriam-Webster dictionary</div>
+    <p class="note">Search results come from Merriam-Webster’s Collegiate Dictionary once you add a free personal key. Without one, the app uses the Free Dictionary (built on Wiktionary).</p></div>
+    <ol class="note steps"><li>Open <span class="sel">dictionaryapi.com</span> and click <b>Register</b> (it’s free for personal, non-commercial use).</li><li>Under “Request API Key #1”, choose <b>Collegiate Dictionary</b>, fill in the form and submit.</li><li>Confirm your email, sign in, open <b>Your Keys</b> and copy the Dictionary key here.</li></ol>
+    <div class="field"><label for="mwKey">Merriam-Webster Dictionary key</label><input id="mwKey" autocomplete="off" spellcheck="false" placeholder="e.g. 1a2b3c4d-…"></div>
+    <div id="mwMsg" hidden></div>
+    <div class="actions"><button class="btn" type="button" id="mwClear">Remove key</button><button class="btn primary" type="button" id="mwSave">Save and test</button></div>
+  </div><div class="card" style="margin-top:14px">
     <div><div class="head" style="font-size:26px">Backup &amp; restore</div>
     <p class="note">Your added words and quiz history are saved only in this browser on this device. Download a backup now and then, and to move to a new phone, restore it there.</p></div>
     <div class="tools">
@@ -388,8 +400,52 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showTab(b.datas
 // ---------- dictionary search ----------
 let RECENT=LS.get('vq_recent',[]),lastEntry=null,lookupSeq=0;
 const POSFULL={n:'noun',v:'verb',adj:'adjective',adv:'adverb',u:''};
-async function getJSON(url,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms||9000);
+const NATIVE={};
+window.__httpDone=(id,status,body)=>{const h=NATIVE[id];if(!h)return;delete NATIVE[id];clearTimeout(h.t);
+  if(status>=200&&status<300){try{h.res(JSON.parse(body))}catch(e){h.rej(e)}}else{const e=new Error('http '+status);e.status=status||0;h.rej(e)}};
+function nativeGet(url,ms){return new Promise((res,rej)=>{const id='h'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+  const t=setTimeout(()=>{delete NATIVE[id];rej(new Error('timeout'))},ms||9000);NATIVE[id]={res,rej,t};AndroidBridge.httpGet(id,url)})}
+async function getJSON(url,ms){if(window.AndroidBridge&&AndroidBridge.httpGet)return nativeGet(url,ms);
+  const c=new AbortController(),t=setTimeout(()=>c.abort(),ms||9000);
   try{const r=await fetch(url,{signal:c.signal});if(!r.ok){const e=new Error('http '+r.status);e.status=r.status;throw e}return await r.json()}finally{clearTimeout(t)}}
+
+// ---------- Merriam-Webster ----------
+const MW_AUDIO=a=>{const sub=/^bix/.test(a)?'bix':/^gg/.test(a)?'gg':/^[^a-z]/i.test(a)?'number':a[0];return `https://media.merriam-webster.com/audio/prons/en/us/mp3/${sub}/${a}.mp3`};
+function mwText(t){return String(t||'').replace(/\{ldquo\}/g,'“').replace(/\{rdquo\}/g,'”').replace(/\{(?:sx|a_link|d_link|i_link|et_link|mat|dxt)\|([^|}]*)[^}]*\}/g,'$1').replace(/\{[^}]*\}/g,'').replace(/\s+/g,' ').trim()}
+function mwSenses(node){const out=[];(function walk(n){if(!n)return;if(Array.isArray(n)){n.forEach(walk);return}if(typeof n==='object'){if(Array.isArray(n.dt)){let text='',ex='';for(const it of n.dt){if(it[0]==='text'&&!text)text=mwText(it[1]);if(it[0]==='vis'&&!ex&&it[1]&&it[1][0])ex=mwText(it[1][0].t)}out.push({text,ex})}Object.values(n).forEach(v=>{if(v&&typeof v==='object'&&v!==n.dt)walk(v)})}})(node);return out}
+function mwExFor(sd,list){const a=sd.toLowerCase().replace(/[^a-z ]/g,'').trim();const hit=list.find(x=>x.ex&&x.text.toLowerCase().replace(/[^a-z ]/g,'').trim().startsWith(a.slice(0,Math.min(a.length,24))));return hit?hit.ex:''}
+function fromMW(w,d){
+  if(!Array.isArray(d)||!d.length)return{entry:null,sugg:[]};
+  if(typeof d[0]==='string')return{entry:null,sugg:d.slice(0,6)};
+  const lw=w.toLowerCase();
+  let ents=d.filter(e=>e&&e.meta&&(String(e.meta.id).split(':')[0].toLowerCase()===lw||(e.meta.stems||[]).some(x=>x.toLowerCase()===lw)));
+  if(!ents.length)ents=d.filter(e=>e&&e.shortdef&&e.shortdef.length).slice(0,1);
+  if(!ents.length)return{entry:null,sugg:[]};
+  const senses=new Map();let phon='',audio='';
+  for(const e of ents.slice(0,4)){
+    const pr=(e.hwi&&e.hwi.prs||[])[0];if(pr&&!phon)phon=pr.mw?'\\'+pr.mw+'\\':'';if(pr&&pr.sound&&pr.sound.audio&&!audio)audio=MW_AUDIO(pr.sound.audio);
+    const pos=e.fl||'';if(!senses.has(pos))senses.set(pos,{pos,defs:[],syn:[],ant:[]});const S=senses.get(pos);
+    const sl=mwSenses(e.def);
+    (e.shortdef||[]).forEach(sd=>{if(S.defs.length<5)S.defs.push({d:mwText(sd),ex:mwExFor(mwText(sd),sl)})});
+  }
+  const list=[...senses.values()].filter(S=>S.defs.length);
+  return{entry:list.length?{w,phon,audio,senses:list,src:'Merriam-Webster'}:null,sugg:[]};
+}
+const MWKEY=()=>{try{return(localStorage.getItem('vq_mwkey')||'').trim()}catch(e){return''}};
+// ---------- full dictionary pages ----------
+const SITES={
+  mw:{name:'Merriam-Webster',url:q=>'https://www.merriam-webster.com/dictionary/'+encodeURIComponent(q.toLowerCase())},
+  cam:{name:'Cambridge',url:q=>'https://dictionary.cambridge.org/dictionary/english/'+encodeURIComponent(q.toLowerCase().replace(/\s+/g,'-'))},
+  camhi:{name:'Cambridge English–Hindi',url:q=>'https://dictionary.cambridge.org/dictionary/english-hindi/'+encodeURIComponent(q.toLowerCase().replace(/\s+/g,'-'))},
+  oxf:{name:'Oxford Learner’s',url:q=>'https://www.oxfordlearnersdictionaries.com/search/english/?q='+encodeURIComponent(q.toLowerCase())}
+};
+function siteButtons(w){return `<div class="syn sites"><span>Full entry:</span>${Object.entries(SITES).map(([k,v])=>`<button class="chip" type="button" data-site="${k}" data-sq="${esc(w)}">${esc(v.name)} ↗</button>`).join('')}</div>`}
+function openDict(site,q){const S=SITES[site];if(!S||!q)return;const url=S.url(q);
+  if(window.AndroidBridge&&AndroidBridge.openDict){try{AndroidBridge.openDict(url,q,S.name);return}catch(e){}}
+  try{window.open(url,'_blank','noopener')}catch(e){}}
+window.addFromDict=q=>{q=String(q||'').replace(/[-_]+/g,' ').replace(/\s+\d+$/,'').trim();if(q)lookup(q,{autoAdd:true})};
+window.addFromGoogle=window.addFromDict;
+
 function fromFreeDict(d){
   if(!Array.isArray(d)||!d.length)return null;
   const senses=new Map();let phon='',audio='';
@@ -397,12 +453,12 @@ function fromFreeDict(d){
     for(const m of (e.meanings||[])){const pos=m.partOfSpeech||'';if(!senses.has(pos))senses.set(pos,{pos,defs:[],syn:new Set(),ant:new Set()});const S=senses.get(pos);
       for(const x of (m.synonyms||[]))S.syn.add(x);for(const x of (m.antonyms||[]))S.ant.add(x);
       for(const df of (m.definitions||[])){if(S.defs.length<5)S.defs.push({d:df.definition,ex:df.example||''});for(const x of (df.synonyms||[]))S.syn.add(x);for(const x of (df.antonyms||[]))S.ant.add(x)}}}
-  return{w:d[0].word,phon,audio,senses:[...senses.values()].map(S=>({pos:S.pos,defs:S.defs,syn:[...S.syn].slice(0,8),ant:[...S.ant].slice(0,6)}))};
+  return{src:'Free Dictionary',w:d[0].word,phon,audio,senses:[...senses.values()].map(S=>({pos:S.pos,defs:S.defs,syn:[...S.syn].slice(0,8),ant:[...S.ant].slice(0,6)}))};
 }
 function fromDatamuse(o){
   const senses=new Map();
   for(const raw of (o.defs||[])){const [p,...rest]=raw.split('\t');const pos=POSFULL[p]??p;if(!senses.has(pos))senses.set(pos,{pos,defs:[],syn:[],ant:[]});const S=senses.get(pos);if(S.defs.length<5)S.defs.push({d:rest.join(' '),ex:''})}
-  return{w:o.word,phon:'',audio:'',senses:[...senses.values()]};
+  return{src:'WordNet',w:o.word,phon:'',audio:'',senses:[...senses.values()]};
 }
 function cleanTr(d,src,wantDeva){
   const out=[];const push=t=>{t=String(t||'').trim().replace(/\s*[.।]$/,'');if(!t||t.length>60)return;if(wantDeva!==DEVA.test(t))return;if(t.toLowerCase()===src.toLowerCase())return;if(/MYMEMORY|QUERY LENGTH|INVALID/i.test(t))return;if(!out.includes(t))out.push(t)};
@@ -421,8 +477,10 @@ function resultCard(e,hi){
     ${S.syn.length?`<div class="syn"><span>Similar:</span>${S.syn.map(x=>`<button class="chip" type="button" data-w="${esc(x)}">${esc(x)}</button>`).join('')}</div>`:''}
     ${S.ant.length?`<div class="syn"><span>Opposite:</span>${S.ant.map(x=>`<button class="chip" type="button" data-w="${esc(x)}">${esc(x)}</button>`).join('')}</div>`:''}</div>`).join('');
   const exists=WORDS.has(keyOf(e.w));
-  return `<div class="card" id="resCard"><div class="wordtop"><span class="head"><span>${esc(e.w)}</span></span>${e.phon?`<span class="phon">${esc(e.phon)}</span>`:''}${e.audio?`<button class="play" type="button" id="playBtn" data-a="${esc(e.audio)}">▶ Listen</button>`:''}<button class="gbtn" type="button" data-g="${esc(e.w)}">Google ↗</button></div>
+  return `<div class="card" id="resCard"><div class="wordtop"><span class="head"><span>${esc(e.w)}</span></span>${e.phon?`<span class="phon">${esc(e.phon)}</span>`:''}${e.audio?`<button class="play" type="button" id="playBtn" data-a="${esc(e.audio)}">▶ Listen</button>`:''}</div>
+    <div class="small">Meanings from ${esc(e.src||'the dictionary')}${e.src!=='Merriam-Webster'&&!MWKEY()?' · <button class="linkbtn" type="button" data-goto="backup">use Merriam-Webster</button>':''}</div>
     ${senses}
+    ${siteButtons(e.w)}
     <div class="field"><label for="hiIn">Hindi meaning ${hi?'(suggested, edit if needed)':'(optional)'}</label><input id="hiIn" class="deva" value="${esc(hi)}" placeholder="हिंदी अर्थ"></div>
     <p class="small">Tick the meanings you want to keep. The first ticked one is used in quizzes.</p>
     <div id="resMsg" hidden></div>
@@ -430,9 +488,10 @@ function resultCard(e,hi){
 }
 function missCard(w,offline,sugg,en,hi){
   const deva=DEVA.test(w);
-  return `<div class="card" id="resCard"><div class="wordtop"><div class="head" style="font-size:26px">${esc(w)}</div><button class="gbtn" type="button" data-g="${esc(w)}">Google ↗</button></div>
-    <p class="note">${offline?'Couldn’t reach the online dictionary. Check your internet connection and search again, or add the word with your own meaning below.':deva?'Hindi words aren’t in the English dictionary. Add it with its meaning below.':'No dictionary meaning found automatically. Check Google’s results and type the meaning below.'}</p>
+  return `<div class="card" id="resCard"><div class="head" style="font-size:26px">${esc(w)}</div>
+    <p class="note">${offline?'Couldn’t reach the online dictionary. Check your internet connection and search again, or add the word with your own meaning below.':deva?'Hindi words aren’t in the English dictionary. Add it with its meaning below.':'No meaning found automatically. Check a full dictionary entry below and type the meaning here.'}</p>
     ${sugg.length?`<div class="syn"><span>Did you mean:</span>${sugg.map(x=>`<button class="chip" type="button" data-w="${esc(x)}">${esc(x)}</button>`).join('')}</div>`:''}
+    ${deva?'':siteButtons(w)}
     <div class="field"><label for="enIn">Meaning in English</label><input id="enIn" value="${esc(en||'')}" placeholder="What the word means"></div>
     <div class="field"><label for="hiIn">Meaning in Hindi</label><input id="hiIn" class="deva" value="${esc(hi||'')}" placeholder="हिंदी अर्थ"></div>
     <div class="field"><label for="exIn">Example sentence (optional)</label><input id="exIn" placeholder="A sentence using the word"></div>
@@ -449,7 +508,8 @@ function saveWord(item){
 function wireResult(w){
   const root=$('sResult');
   root.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>lookup(b.dataset.w));
-  root.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{if(isApp){try{AndroidBridge.openGoogle(b.dataset.g)}catch(e){}}else window.open(gURL(b.dataset.g),'_blank','noopener')});
+  root.querySelectorAll('[data-site]').forEach(b=>b.onclick=()=>openDict(b.dataset.site,b.dataset.sq));
+  root.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{showTab(b.dataset.goto);$('mwKey').focus()});
   const pb=$('playBtn');if(pb)pb.onclick=()=>{try{new Audio(pb.dataset.a).play().catch(()=>{pb.textContent='Audio unavailable'})}catch(e){}};
   const ab=$('addRes');if(!ab)return;
   ab.onclick=()=>{
@@ -482,13 +542,16 @@ async function lookup(raw,opts){
   const deva=DEVA.test(w);
   let entry=null,offline=false,notFound=false,sugg=[];
   const trP=deva?translate(w,'hi|en'):translate(w,'en|hi');
-  if(!deva){
+  if(!deva&&MWKEY()){
+    try{const r=fromMW(w,await getJSON('https://www.dictionaryapi.com/api/v3/references/collegiate/json/'+encodeURIComponent(w.toLowerCase())+'?key='+encodeURIComponent(MWKEY()),9000));entry=r.entry;if(!entry&&r.sugg.length)sugg=r.sugg}catch(e){}
+  }
+  if(!deva&&!entry){
     try{entry=fromFreeDict(await getJSON('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(w.toLowerCase())))}
     catch(e){if(e.status===404)notFound=true;else offline=true}
     if(!entry){try{entry=fromWiktionary(w,await getJSON('https://en.wiktionary.org/api/rest_v1/page/definition/'+encodeURIComponent(w.replace(/ /g,'_')),8000));if(entry){offline=false;notFound=false}}catch(e){if(e.status===404)notFound=true}}
     if(!entry){try{const d=await getJSON('https://api.datamuse.com/words?sp='+encodeURIComponent(w.toLowerCase())+'&md=d&max=1',7000);
         if(d[0]&&d[0].defs&&d[0].word.toLowerCase()===w.toLowerCase()){entry=fromDatamuse(d[0]);offline=false}else{offline=false;notFound=true}}catch(e){}}
-    if(!entry&&notFound){try{sugg=(await getJSON('https://api.datamuse.com/sug?s='+encodeURIComponent(w)+'&max=7',6000)).map(x=>x.word).filter(x=>x.toLowerCase()!==w.toLowerCase()).slice(0,6)}catch(e){}}
+    if(!entry&&notFound&&!sugg.length){try{sugg=(await getJSON('https://api.datamuse.com/sug?s='+encodeURIComponent(w)+'&max=7',6000)).map(x=>x.word).filter(x=>x.toLowerCase()!==w.toLowerCase()).slice(0,6)}catch(e){}}
   }
   const tr=await trP;
   if(seq!==lookupSeq)return;
@@ -498,7 +561,7 @@ async function lookup(raw,opts){
   if(opts.autoAdd){
     const ab=$('addRes');
     if(entry||($('enIn')&&$('enIn').value.trim())||($('hiIn')&&$('hiIn').value.trim())){ab.click()}
-    else showMsg($('resMsg'),'No meaning was found automatically. Type the meaning from Google above, then tap Add to my words.','err');
+    else showMsg($('resMsg'),'No meaning was found automatically. Type the meaning from the dictionary, then tap Add to my words.','err');
     if($('resCard'))$('resCard').scrollIntoView({block:'start'});
   }
 }
@@ -506,20 +569,12 @@ function fromWiktionary(w,d){
   const strip=h=>{const t=document.createElement('div');t.innerHTML=String(h||'');return t.textContent.replace(/\s+/g,' ').trim()};
   const list=(d&&d.en)||[];if(!list.length)return null;
   const senses=list.map(x=>({pos:(x.partOfSpeech||'').toLowerCase(),defs:(x.definitions||[]).map(df=>({d:strip(df.definition),ex:strip((df.examples||[])[0]||'')})).filter(df=>df.d).slice(0,5),syn:[],ant:[]})).filter(S=>S.defs.length);
-  return senses.length?{w:w,phon:'',audio:'',senses}:null;
+  return senses.length?{src:'Wiktionary',w:w,phon:'',audio:'',senses}:null;
 }
-// ---------- Google search + voice ----------
+// ---------- search + voice ----------
 const isApp=!!window.AndroidBridge;
 if(isApp)document.documentElement.classList.add('isApp');
-const gURL=q=>'https://www.google.com/search?q='+encodeURIComponent(q.trim()+' meaning');
-function googleSearch(q){
-  q=String(q||'').trim();if(!q)return;
-  if(isApp){try{AndroidBridge.openGoogle(q);}catch(e){}}
-  else{try{window.open(gURL(q),'_blank','noopener')}catch(e){}}
-  lookup(q);
-}
-window.addFromGoogle=q=>{q=String(q||'').replace(/\s+(meaning|definition|in hindi|meaning in hindi)$/i,'').replace(/^(define|meaning of)\s+/i,'').trim();if(q)lookup(q,{autoAdd:true})};
-window.onVoiceResult=t=>{const mb=$('micBtn');mb.classList.remove('on');t=String(t||'').trim();if(t){$('sq').value=t;googleSearch(t)}};
+window.onVoiceResult=t=>{const mb=$('micBtn');mb.classList.remove('on');t=String(t||'').trim();if(t){$('sq').value=t;lookup(t)}};
 (function setupVoice(){
   const mb=$('micBtn');const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(isApp&&AndroidBridge.startVoice){mb.hidden=false;mb.onclick=()=>{mb.classList.add('on');try{AndroidBridge.startVoice()}catch(e){mb.classList.remove('on')}};return}
@@ -549,8 +604,22 @@ $('sq').addEventListener('input',()=>{
 });
 $('sq').addEventListener('blur',()=>setTimeout(hideSug,150));
 $('sq').addEventListener('keydown',e=>{if(e.key==='Escape')hideSug()});
-$('sForm').onsubmit=e=>{e.preventDefault();googleSearch($('sq').value)};
+$('sForm').onsubmit=e=>{e.preventDefault();lookup($('sq').value)};
 renderRecent();
+
+// ---------- Merriam-Webster key ----------
+try{$('mwKey').value=MWKEY()}catch(e){}
+$('mwSave').onclick=async()=>{
+  const k=$('mwKey').value.trim();if(!k){showMsg($('mwMsg'),'Paste your key first.','err');return}
+  showMsg($('mwMsg'),'Testing the key…','');
+  try{const d=await getJSON('https://www.dictionaryapi.com/api/v3/references/collegiate/json/test?key='+encodeURIComponent(k),9000);
+    if(Array.isArray(d)&&d.length&&typeof d[0]==='object'){try{localStorage.setItem('vq_mwkey',k)}catch(e){}showMsg($('mwMsg'),'Key works. Searches now use Merriam-Webster.','ok')}
+    else showMsg($('mwMsg'),'That key didn’t return dictionary results. Make sure it’s the Collegiate Dictionary key.','err')}
+  catch(e){const bad=e.status===403||e.status===401||e instanceof SyntaxError;
+    if(bad)showMsg($('mwMsg'),'Merriam-Webster rejected that key. Copy the Dictionary key from “Your Keys” again.','err');
+    else{try{localStorage.setItem('vq_mwkey',k)}catch(x){}showMsg($('mwMsg'),'Saved, but couldn’t reach Merriam-Webster to test it'+(isApp?' (check your internet).':'. On this browser the app may fall back to the Free Dictionary; the phone app always works.'),'err')}}
+};
+$('mwClear').onclick=()=>{try{localStorage.removeItem('vq_mwkey')}catch(e){}$('mwKey').value='';showMsg($('mwMsg'),'Key removed. Searches use the Free Dictionary.','ok')};
 
 // ---------- own words ----------
 let editingKey=null,delArm=null;

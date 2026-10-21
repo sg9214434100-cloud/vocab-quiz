@@ -81,7 +81,7 @@ public class MainActivity extends Activity {
             return;
         }
         if (req == GOOGLE) {
-            if (res == RESULT_OK && data != null) callJs("addFromGoogle", data.getStringExtra(GoogleActivity.EXTRA_QUERY));
+            if (res == RESULT_OK && data != null) callJs("addFromDict", data.getStringExtra(DictActivity.EXTRA_QUERY));
             return;
         }
         if (req == PICK_FILE && fileCallback != null) {
@@ -98,12 +98,44 @@ public class MainActivity extends Activity {
 
     class Bridge {
         @JavascriptInterface
-        public void openGoogle(String q) {
+        public void openDict(String url, String q, String title) {
             runOnUiThread(() -> {
-                Intent i = new Intent(MainActivity.this, GoogleActivity.class);
-                i.putExtra(GoogleActivity.EXTRA_QUERY, q);
+                Intent i = new Intent(MainActivity.this, DictActivity.class);
+                i.putExtra(DictActivity.EXTRA_URL, url);
+                i.putExtra(DictActivity.EXTRA_QUERY, q);
+                i.putExtra(DictActivity.EXTRA_TITLE, title);
                 startActivityForResult(i, GOOGLE);
             });
+        }
+
+        /** Fetches a dictionary API address natively (no browser cross-site limits) and hands the text back to the page. */
+        @JavascriptInterface
+        public void httpGet(String id, String url) {
+            new Thread(() -> {
+                int status = 0;
+                String body = "";
+                try {
+                    if (!url.startsWith("https://")) throw new Exception("https only");
+                    java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+                    c.setConnectTimeout(8000);
+                    c.setReadTimeout(10000);
+                    c.setRequestProperty("Accept", "application/json");
+                    c.setRequestProperty("User-Agent", "VocabQuiz/1.0 (Android)");
+                    status = c.getResponseCode();
+                    java.io.InputStream in = status >= 400 ? c.getErrorStream() : c.getInputStream();
+                    if (in != null) {
+                        java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                        byte[] buf = new byte[8192];
+                        int n;
+                        while ((n = in.read(buf)) > 0 && bo.size() < 3_000_000) bo.write(buf, 0, n);
+                        in.close();
+                        body = bo.toString("UTF-8");
+                    }
+                    c.disconnect();
+                } catch (Exception e) { status = 0; }
+                final String js = "window.__httpDone&&window.__httpDone(" + JSONObject.quote(id) + "," + status + "," + JSONObject.quote(body) + ")";
+                runOnUiThread(() -> web.evaluateJavascript(js, null));
+            }).start();
         }
 
         @JavascriptInterface

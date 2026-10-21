@@ -16,9 +16,11 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-/** Shows Google's results for a word or phrase, with a button that adds the searched text to My Words. */
-public class GoogleActivity extends Activity {
+/** Shows a dictionary page (Merriam-Webster, Cambridge, Oxford) with a button that adds the word to My Words. */
+public class DictActivity extends Activity {
     static final String EXTRA_QUERY = "q";
+    static final String EXTRA_URL = "url";
+    static final String EXTRA_TITLE = "title";
     private WebView web;
     private String query;
 
@@ -47,7 +49,8 @@ public class GoogleActivity extends Activity {
         back.setTextColor(blue);
         back.setOnClickListener(v -> finish());
         TextView title = new TextView(this);
-        title.setText("Google");
+        String t = getIntent().getStringExtra(EXTRA_TITLE);
+        title.setText(t == null ? "Dictionary" : t);
         title.setTextColor(Color.parseColor("#5A6577"));
         title.setTextSize(14);
         top.addView(back);
@@ -88,16 +91,28 @@ public class GoogleActivity extends Activity {
         setContentView(root);
 
         if (b != null) web.restoreState(b);
-        else web.loadUrl("https://www.google.com/search?q=" + Uri.encode(query + " meaning"));
+        else {
+            String url = getIntent().getStringExtra(EXTRA_URL);
+            web.loadUrl(url != null ? url : "https://www.merriam-webster.com/dictionary/" + Uri.encode(query));
+        }
     }
 
-    /** The word the person is looking at now: the q= of the current Google page, else the original search. */
+    /** The word the person is looking at now, read from the dictionary page's address; else the original search. */
     private String currentQuery() {
         try {
-            String url = web.getUrl();
-            if (url != null && url.contains("google.") && url.contains("/search")) {
-                String q = Uri.parse(url).getQueryParameter("q");
-                if (q != null && !q.trim().isEmpty()) return q.trim();
+            Uri u = Uri.parse(web.getUrl());
+            String host = u.getHost() == null ? "" : u.getHost();
+            java.util.List<String> seg = u.getPathSegments();
+            String w = null;
+            if (host.contains("merriam-webster.com") && seg.size() >= 2 && seg.get(0).equals("dictionary")) w = seg.get(1);
+            else if (host.contains("cambridge.org") && seg.size() >= 3 && seg.get(0).equals("dictionary")) w = seg.get(2);
+            else if (host.contains("oxfordlearnersdictionaries.com")) {
+                if (seg.size() >= 3 && seg.get(0).equals("definition")) w = seg.get(2).replaceAll("_\\d+$", "");
+                else w = u.getQueryParameter("q");
+            } else if (host.contains("google.")) w = u.getQueryParameter("q");
+            if (w != null) {
+                w = w.replace('-', ' ').replace('_', ' ').trim();
+                if (!w.isEmpty()) return w;
             }
         } catch (Exception ignored) { }
         return query;
