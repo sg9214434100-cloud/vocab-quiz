@@ -107,6 +107,10 @@ body{min-height:100vh}
 #pSearch{display:flex;flex-direction:column;gap:14px}
 #pSearch[hidden]{display:none!important}
 .sbar{display:flex;gap:8px;align-items:stretch}
+.addtop{border-color:var(--accent);color:var(--accent);white-space:nowrap}
+.addtop:disabled{border-color:var(--line);color:var(--muted)}
+.addtop .sm{display:none}
+@media (max-width:560px){.addtop .lg{display:none}.addtop .sm{display:inline}.sbar .btn{padding:10px 12px}}
 .sbox{position:relative;flex:1;min-width:0}
 .sbox input{width:100%;height:100%;font:18px var(--display);padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
 .sugg{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;list-style:none;padding:4px;margin:0;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12)}
@@ -184,10 +188,11 @@ html.isApp .webOnly,html:not(.isApp) .appOnly{display:none}
   <section id="pSearch">
     <form class="sbar" id="sForm" autocomplete="off" role="search">
       <label for="sq" class="vh">Look up a word or phrase</label>
-      <div class="sbox"><input type="search" id="sq" placeholder="Look up a word or phrase" enterkeyhint="search" autocapitalize="off" spellcheck="false">
+      <div class="sbox"><input type="search" id="sq" placeholder="Look up a word" enterkeyhint="search" autocapitalize="off" spellcheck="false">
         <button class="mic" type="button" id="micBtn" aria-label="Search by voice" title="Search by voice" hidden><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg></button>
         <ul class="sugg" id="sugg" hidden></ul></div>
       <button class="btn primary" type="submit" aria-label="Search">Search</button>
+      <button class="btn addtop" type="button" id="addTop" disabled aria-label="Add to my words"><span class="lg">＋ Add to my words</span><span class="sm">＋ Add</span></button>
     </form>
     <div class="recent" id="recent"></div>
     <div id="sResult"><div class="card hint"><div class="head" style="font-size:24px">Look up a word or phrase</div>
@@ -477,7 +482,7 @@ function resultCard(e,hi){
     ${S.syn.length?`<div class="syn"><span>Similar:</span>${S.syn.map(x=>`<button class="chip" type="button" data-w="${esc(x)}">${esc(x)}</button>`).join('')}</div>`:''}
     ${S.ant.length?`<div class="syn"><span>Opposite:</span>${S.ant.map(x=>`<button class="chip" type="button" data-w="${esc(x)}">${esc(x)}</button>`).join('')}</div>`:''}</div>`).join('');
   const exists=WORDS.has(keyOf(e.w));
-  return `<div class="card" id="resCard"><div class="wordtop"><span class="head"><span>${esc(e.w)}</span></span>${e.phon?`<span class="phon">${esc(e.phon)}</span>`:''}${e.audio?`<button class="play" type="button" id="playBtn" data-a="${esc(e.audio)}">▶ Listen</button>`:''}</div>
+  return `<div class="card" id="resCard" data-w="${esc(e.w)}" data-noclick="1"><div class="wordtop"><span class="head"><span>${esc(e.w)}</span></span>${e.phon?`<span class="phon">${esc(e.phon)}</span>`:''}${e.audio?`<button class="play" type="button" id="playBtn" data-a="${esc(e.audio)}">▶ Listen</button>`:''}</div>
     <div class="small">Meanings from ${esc(e.src||'the dictionary')}${e.src!=='Merriam-Webster'&&!MWKEY()?' · <button class="linkbtn" type="button" data-goto="backup">use Merriam-Webster</button>':''}</div>
     ${senses}
     ${siteButtons(e.w)}
@@ -488,7 +493,7 @@ function resultCard(e,hi){
 }
 function missCard(w,offline,sugg,en,hi){
   const deva=DEVA.test(w);
-  return `<div class="card" id="resCard"><div class="head" style="font-size:26px">${esc(w)}</div>
+  return `<div class="card" id="resCard" data-w="${esc(w)}" data-noclick="1"><div class="head" style="font-size:26px">${esc(w)}</div>
     <p class="note">${offline?'Couldn’t reach the online dictionary. Check your internet connection and search again, or add the word with your own meaning below.':deva?'Hindi words aren’t in the English dictionary. Add it with its meaning below.':'No meaning found automatically. Check a full dictionary entry below and type the meaning here.'}</p>
     ${sugg.length?`<div class="syn"><span>Did you mean:</span>${sugg.map(x=>`<button class="chip" type="button" data-w="${esc(x)}">${esc(x)}</button>`).join('')}</div>`:''}
     ${deva?'':siteButtons(w)}
@@ -507,7 +512,7 @@ function saveWord(item){
 }
 function wireResult(w){
   const root=$('sResult');
-  root.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>lookup(b.dataset.w));
+  root.querySelectorAll('[data-w]:not([data-noclick])').forEach(b=>b.onclick=()=>lookup(b.dataset.w));
   root.querySelectorAll('[data-site]').forEach(b=>b.onclick=()=>openDict(b.dataset.site,b.dataset.sq));
   root.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{showTab(b.dataset.goto);$('mwKey').focus()});
   const pb=$('playBtn');if(pb)pb.onclick=()=>{try{new Audio(pb.dataset.a).play().catch(()=>{pb.textContent='Audio unavailable'})}catch(e){}};
@@ -529,6 +534,7 @@ function wireResult(w){
     if(!r){showMsg($('resMsg'),'This browser is not letting the app save. Open it in Chrome or Edge, not in a private tab.','err');return}
     showMsg($('resMsg'),r==='updated'?'Updated in your words.':'Added to your words. It will come up in your quizzes more often this week.','ok');
     ab.textContent=r==='updated'?'Updated ✓':'Added ✓';ab.disabled=true;
+    $('sq').value='';hideSug();updateAddTop();
   };
 }
 async function lookup(raw,opts){
@@ -557,7 +563,7 @@ async function lookup(raw,opts){
   if(seq!==lookupSeq)return;
   lastEntry=entry;
   out.innerHTML=(mine?mineCard(mine):'')+(entry?resultCard(entry,tr):missCard(w,offline,sugg,deva?tr:'',deva?'':tr));
-  wireResult(w);
+  wireResult(w);updateAddTop();
   if(opts.autoAdd){
     const ab=$('addRes');
     if(entry||($('enIn')&&$('enIn').value.trim())||($('hiIn')&&$('hiIn').value.trim())){ab.click()}
@@ -594,6 +600,18 @@ function renderRecent(){
   $('recent').querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>lookup(b.dataset.w));
 }
 function hideSug(){$('sugg').hidden=true}
+function updateAddTop(){
+  const q=$('sq').value.trim(),ab=$('addRes');
+  const pending=ab&&!ab.disabled;
+  $('addTop').disabled=!q&&!pending;
+}
+$('addTop').onclick=()=>{
+  const q=$('sq').value.trim().replace(/\s+/g,' '),ab=$('addRes');
+  const shown=$('resCard')&&$('resCard').dataset.w;
+  if(ab&&!ab.disabled&&(!q||keyOf(q)===keyOf(shown||''))){ab.click();if($('resMsg'))$('resCard').scrollIntoView({block:'nearest'});return}
+  if(q)lookup(q,{autoAdd:true});
+};
+$('sq').addEventListener('input',updateAddTop);
 $('sq').addEventListener('input',()=>{
   const q=$('sq').value.trim().toLowerCase();if(q.length<2){hideSug();return}
   const hits=[...WORDS.values()].filter(x=>x.k.startsWith(q)).sort((a,b)=>a.k.length-b.k.length).slice(0,6);
