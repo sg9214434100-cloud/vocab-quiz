@@ -72,6 +72,18 @@ nav button:focus-visible,.btn:focus-visible,.opt:focus-visible,input:focus-visib
 .btn{font:600 14px var(--ui);border-radius:8px;padding:10px 16px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn:disabled{opacity:.5;cursor:default}
+.qtype{color:var(--accent)}
+.tfrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt.tf{justify-content:center;font-size:20px;padding:16px}
+.slots,.tiles{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.slot{width:36px;height:44px;border-bottom:3px solid var(--line);display:grid;place-items:center;font:600 24px var(--display);text-transform:lowercase}
+.slot.full{border-color:var(--accent)}
+.tile{width:42px;height:46px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:600 22px var(--display);cursor:pointer;box-shadow:0 2px 0 var(--line)}
+.tile:disabled{opacity:.25;cursor:default}
+.gap{font:600 30px var(--mono);letter-spacing:.18em;text-align:center;margin:4px 0;overflow-wrap:anywhere}
+.gap .gl{color:var(--accent)}
+.gapform{display:flex;gap:8px}
+.gapform input{flex:1;min-width:0;font:20px var(--display);padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
 .score{font-family:var(--display);font-size:56px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
 .score small{font-size:24px;color:var(--muted)}
 .review{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
@@ -156,6 +168,16 @@ body{min-height:100vh}
 @keyframes pulse{50%{box-shadow:0 0 0 6px var(--badbg)}}
 .gbtn{font:600 13px var(--ui);border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
 #pAdd{display:flex;flex-direction:column;gap:14px}
+.bigpaste{min-height:220px!important;font:16px/1.5 var(--ui)}
+.pv{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.pv li{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:8px;background:var(--paper)}
+.pv .pvtop{display:flex;gap:8px;align-items:center}
+.pv .pvtop input{flex:1;min-width:0;font:600 18px var(--display)}
+.pv input,.pv textarea{width:100%;font:15px var(--ui);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);resize:vertical}
+.pv textarea{min-height:0}
+.pv .deva{font-family:var(--deva)}
+.pv .lab{font:500 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:-4px}
+.pv .bad input[data-f=en]{border-color:var(--bad)}
 #pAdd[hidden]{display:none!important}
 .field textarea{min-height:0}
 .field textarea,.field select{font:16px var(--ui);padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);resize:vertical}
@@ -199,33 +221,23 @@ html.isApp .webOnly,html:not(.isApp) .appOnly{display:none}
       <p class="note">Type it, or tap the microphone and say it. You’ll see its meanings, pronunciation, examples and a Hindi meaning, with one-tap links to the full entry in Merriam-Webster, Cambridge and Oxford Learner’s. Tap <b>Add to my words</b> to put it in your daily quiz. Looking up needs an internet connection; your own words work offline.</p></div></div>
   </section>
   <section id="pAdd" hidden>
-    <form class="card" id="ownForm" autocomplete="off">
-      <div><div class="head" style="font-size:26px" id="ownTitle">Add your own word</div>
-      <p class="note">For words and phrases you can’t find on Google: family or regional sayings, slang, terms from your work, or anything you’ve made up. Give it a meaning in English or Hindi (or both) and it joins your daily quiz.</p></div>
-      <div class="field"><label for="oW">Word or phrase *</label><input id="oW" required placeholder="e.g. hawa khwah"></div>
-      <div class="field"><label for="oEn">Meaning in English</label><textarea id="oEn" rows="2" placeholder="What it means"></textarea></div>
-      <div class="field"><label for="oHi">Meaning in Hindi</label><textarea id="oHi" rows="2" class="deva" placeholder="हिंदी अर्थ"></textarea></div>
-      <div class="field"><label for="oPos">Type of word</label>
-        <select id="oPos"><option value="">Not sure</option><option>noun</option><option>verb</option><option>adjective</option><option>adverb</option><option>phrase</option><option>idiom</option><option>slang</option><option>saying</option></select></div>
-      <div class="field"><label for="oEx">Example sentence</label><input id="oEx" placeholder="A sentence using it"></div>
-      <div class="field"><label for="oSyn">Similar words</label><input id="oSyn" placeholder="Comma-separated, optional"></div>
-      <div class="field"><label for="oNote">Where it’s from</label><input id="oNote" placeholder="e.g. Nani’s saying, office jargon, a book (optional)"></div>
-      <div id="ownMsg" hidden></div>
-      <div class="actions"><button class="btn" type="button" id="ownCancel" hidden>Cancel editing</button><button class="btn primary" type="submit" id="ownSave">Add to my words</button></div>
-    </form>
     <div class="card">
-      <div class="head" style="font-size:22px">Your own words</div>
+      <div><div class="head" style="font-size:26px">Add words</div>
+      <p class="note">Copy a word with its meaning from Google, a dictionary, WhatsApp or anywhere else, and paste it here. The app picks out the word, meaning, Hindi meaning and example. For several words, put each on its own line as <span style="font-family:var(--mono)">word - meaning</span>, or leave a blank line between entries.</p></div>
+      <label for="pasteBox" class="vh">Paste a word and its meaning</label>
+      <textarea id="pasteBox" class="bigpaste" placeholder="Paste here, for example:&#10;&#10;sanguine&#10;adjective&#10;optimistic or positive, especially in a difficult situation.&#10;&quot;he is sanguine about the future&quot;&#10;आशावादी"></textarea>
+      <div class="actions"><button class="btn" id="clearBtn" type="button">Clear</button><button class="btn primary" id="readBtn" type="button">Read words</button></div>
+      <div id="addMsg" hidden></div>
+      <div id="previewWrap" hidden>
+        <p class="small">Check what the app found. You can correct anything before adding.</p>
+        <ul class="pv" id="preview"></ul>
+        <div class="actions" style="margin-top:12px"><button class="btn" id="cancelAdd" type="button">Discard</button><button class="btn primary" id="saveAdd" type="button">Add to my words</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="head" style="font-size:22px">Words you added here</div>
       <ul class="wl" id="ownList"></ul>
     </div>
-    <details class="card paste" id="pasteCard"><summary>Paste several words at once</summary>
-    <p class="note">Paste one dictionary entry as copied (word on the first line, then its meaning, Hindi and example), or many words with one per line like <span style="font-family:var(--mono)">pernicious - harmful in a gradual way</span>.</p>
-    <label for="pasteBox" class="note" style="font-weight:500;color:var(--ink)">Words and meanings</label>
-    <textarea id="pasteBox" placeholder="sanguine&#10;adjective&#10;optimistic, especially in a bad situation&#10;आशावादी&#10;She is sanguine about the future."></textarea>
-    <div class="actions"><button class="btn" id="clearBtn" type="button">Clear</button><button class="btn primary" id="readBtn" type="button">Read words</button></div>
-    <div id="addMsg" hidden></div>
-    <div id="previewWrap" hidden><ul class="preview" id="preview"></ul>
-      <div class="actions" style="margin-top:12px"><button class="btn" id="cancelAdd" type="button">Discard</button><button class="btn primary" id="saveAdd" type="button">Save words</button></div></div>
-    </details>
   </section>
   <section id="pQuiz" hidden><div class="card" id="quizCard"><div class="empty">Loading…</div></div></section>
   <section id="pList" hidden><div class="card">
@@ -292,10 +304,21 @@ function quizMeaning(it){
 function posAbbr(p){p=(p||'').toLowerCase();if(!p)return'';return p.replace(/adjective/g,'adj.').replace(/adverb/g,'adv.').replace(/phrasal verb/g,'phr. v.').replace(/\bnoun\b/g,'n.').replace(/\bverb\b/g,'v.')}
 function fmtDate(iso){if(!iso)return'';const d=new Date(iso.slice(0,10)+'T00:00:00');return isNaN(d)?iso:d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}
 
+function cleanQ(q){
+  let t=String(q||'').trim();
+  t=t.replace(/^(?:the (?:word|term|phrase|idiom|expression)\s+)?["“]?____["”]?\s*(?:\([^)]*\)\s*)?(?:(?:most commonly|primarily|typically|generally|usually|simply)\s+)?(?:means|is defined as|refers to|describes|denotes|signifies)\s+/i,'');
+  t=t.replace(/^(?:an?|the)\s+["“]?____["”]?\s+(?:is|are|was)\s+(?:an?\s+)?/i,'');
+  t=t.replace(/^["“]?____["”]?\s+(?:is|are)\s+(?:an?\s+|the\s+)?/i,'');
+  t=t.replace(/^(?:to\s+)?["“]?____["”]?\s+(?:means|meaning)\s+/i,'');
+  t=t.replace(/^(?:a|an)\s+(?:formal|informal|old-fashioned|medical|common|vulgar|derogatory|british|latin|french)?\s*(?:slang\s+)?(?:noun|verb|adjective|adverb|word|term|phrase|idiom|expression)\s+(?:that|which)\s+(?:means|refers to)\s+/i,'');
+  t=t.replace(/^(?:most commonly |commonly |primarily |typically )?(?:defined as|used to (?:mean|describe))\s+/i,'');
+  t=t.replace(/^[,:;\s]+/,'');
+  return t?t[0].toUpperCase()===t[0]&&/^[A-Z][a-z]/.test(t)&&!/^[A-Z]{2}/.test(t)?t:t:q;
+}
 function loadWords(){
   const m=new Map();
   for(const it of [...BASE_WORDS,...ADDED]){if(!it||!it.w)continue;const k=keyOf(it.w);const prev=m.get(k);
-    m.set(k,{pos:'',en:'',hi:'',ex:'',syn:'',...it,k,lang:it.lang||(DEVA.test(it.w)?'hi':'en'),q:it.q||quizMeaning(it),added:(prev&&prev.added&&prev.added<(it.added||'9'))?prev.added:(it.added||TODAY)})}
+    m.set(k,{pos:'',en:'',hi:'',ex:'',syn:'',...it,k,lang:it.lang||(DEVA.test(it.w)?'hi':'en'),q:cleanQ(it.q||quizMeaning(it)),added:(prev&&prev.added&&prev.added<(it.added||'9'))?prev.added:(it.added||TODAY)})}
   WORDS=m;
 }
 
@@ -317,47 +340,118 @@ function pickOptions(item,type,pool,r){
   for(const x of [...pref.slice(0,6),...rest]){const t=type==='m'?x.q:x.w.toLowerCase();if(seen.has(t))continue;seen.add(t);out.push(x.k);if(out.length===3)break}
   return shuffle([item.k,...out],r);
 }
+// ---------- quiz: puzzle types ----------
+const QTYPES={m:'Word → meaning',w:'Meaning → word',fill:'Fill the blank',scr:'Unscramble',gap:'Missing letters',tf:'True or false',hi:'Hindi → English',syn:'Closest meaning'};
+const reEsc=t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+function maskIn(text,w){if(!text||!w)return text;const stem=w.length>5?w.slice(0,-1):w;return text.replace(new RegExp('\\b'+reEsc(stem)+'[a-z]*','gi'),'_____')}
+function firstSyn(x){return(x.syn||'').split(',').map(t=>t.trim()).find(t=>/^[a-z-]{3,}$/i.test(t)&&t.toLowerCase()!==x.k)||''}
+function typesFor(x){
+  const t=['m','tf'];
+  if(x.lang==='en'){
+    t.push('w');const single=/^[a-z]+$/i.test(x.w);
+    const ex=(x.ex||'').split(' ; ')[0];if(ex&&maskIn(ex,x.w)!==ex)t.push('fill');
+    if(single&&x.w.length>=4&&x.w.length<=12)t.push('scr');
+    if(single&&x.w.length>=5)t.push('gap');
+    if(x.hi&&DEVA.test(x.hi)&&/[a-z]/i.test(x.q))t.push('hi');
+    if(firstSyn(x))t.push('syn');
+  }
+  return t;
+}
+function makeItem(x,pool,r,count){
+  const avail=typesFor(x);
+  const min=Math.min(...avail.map(t=>count[t]||0));
+  const pick=shuffle(avail.filter(t=>(count[t]||0)===min),r)[0];count[pick]=(count[pick]||0)+1;
+  const it={k:x.k,t:pick,a:null};
+  if(pick==='m'||pick==='w'||pick==='fill'||pick==='hi')it.o=pickOptions(x,pick==='m'?'m':'w',pool,r);
+  if(pick==='tf'){
+    const truth=r()<.5;it.ans=truth?0:1;
+    if(!truth){const qd=DEVA.test(x.q);const others=shuffle(pool.filter(y=>y.k!==x.k&&y.q&&DEVA.test(y.q)===qd&&y.q!==x.q),r);if(others[0])it.tk=others[0].k;else it.ans=0}
+  }
+  if(pick==='syn'){
+    const syn=firstSyn(x);const others=shuffle(pool.filter(y=>y.lang==='en'&&/^[a-z]+$/i.test(y.w)&&y.k!==x.k&&y.k!==syn.toLowerCase()&&!(x.syn||'').toLowerCase().includes(y.k)),r).slice(0,3).map(y=>y.w.toLowerCase());
+    const opts=shuffle([syn,...others],r);it.opts=opts;it.ans=opts.indexOf(syn);
+  }
+  if(pick==='scr'){let sc=x.w.toLowerCase();for(let n=0;n<6&&sc===x.w.toLowerCase();n++)sc=shuffle([...x.w.toLowerCase()],r).join('');it.sc=sc}
+  if(pick==='gap'){const w=x.w.toLowerCase(),idx=shuffle([...Array(w.length).keys()].slice(1),r).slice(0,Math.max(2,Math.round(w.length*.45)));it.gp=[...w].map((c,i)=>idx.includes(i)?'_':c).join('')}
+  return it;
+}
 function buildQuiz(seedStr,practice){
   const r=rng(hashStr(seedStr));const pool=[...WORDS.values()].filter(x=>x.q);
   if(pool.length<4)return null;
   const{wrong,seenRecent}=wordStats();
   const ws=pool.map(x=>{let w=1;if(daysAgo(x.added)<=7)w+=3;if(wrong.has(x.k))w+=3;if(seenRecent.has(x.k))w*=.2;return{x,s:Math.pow(r(),1/w)}}).sort((a,b)=>b.s-a.s);
-  const items=ws.slice(0,Math.min(N,pool.length)).map(o=>o.x).map(x=>{const t=(x.lang==='en'&&r()<.4)?'w':'m';return{k:x.k,t,o:pickOptions(x,t,pool,r),a:null}});
-  return{date:TODAY,items,practice:!!practice};
+  const count={};
+  const items=ws.slice(0,Math.min(N,pool.length)).map(o=>makeItem(o.x,pool,r,count));
+  return{date:TODAY,v:2,items:shuffle(items,r),practice:!!practice};
 }
 function saveDay(){
   if(!quiz||quiz.practice)return;
-  HIST[TODAY]={date:TODAY,items:quiz.items.map(i=>({k:i.k,t:i.t,o:i.o,a:i.a})),done:quiz.items.every(i=>i.a!=null),score:quiz.items.filter(i=>i.a===i.k).length};
+  HIST[TODAY]={date:TODAY,v:2,items:quiz.items.map(i=>({...i})),done:quiz.items.every(i=>i.a!=null),score:quiz.items.filter(i=>i.a===i.k).length};
   LS.set('vq_history',HIST);renderStats();
 }
+function answer(it,correct,choice){if(it.a!=null)return;it.a=correct?it.k:'x';it.c=choice;saveDay();renderQuiz();$('nextBtn')?.focus()}
+function optBtn(i,txt,state,disabled,extra){return `<button class="opt ${extra||''} ${state||''} ${DEVA.test(txt)?'deva':''}" data-i="${i}" ${disabled?'disabled':''}><span class="k">${'ABCD'[i]||''}</span><span>${esc(txt)}</span></button>`}
 function renderQuiz(){
   const el=$('quizCard');
   if(!quiz){el.innerHTML='<div class="empty">Add at least four words to start a quiz.</div>';return}
   const items=quiz.items.filter(i=>WORDS.has(i.k));
   if(idx>=items.length)return renderSummary(items);
-  const it=items[idx],w=WORDS.get(it.k),answered=it.a!=null;
+  const it=items[idx],w=WORDS.get(it.k),answered=it.a!=null,ok=it.a===it.k;
   const dots=items.map((x,i)=>`<div class="dot ${x.a==null?(i===idx?'cur':''):(x.a===x.k?'ok':'bad')}"></div>`).join('');
-  const q=it.t==='m'
-    ?`<div class="prompt">What does this mean?</div><div><p class="head ${DEVA.test(w.w)?'deva':''}"><span>${esc(w.w)}</span></p>${w.pos?`<div class="pos">${esc(posAbbr(w.pos))}</div>`:''}</div>`
-    :`<div class="prompt">Which word fits this meaning?</div><p class="def ${DEVA.test(w.q)&&!/[a-z]/i.test(w.q)?'deva':''}">${esc(w.q)}</p>`;
-  const opts=it.o.map((k,i)=>{const o=WORDS.get(k);if(!o)return'';const txt=it.t==='m'?o.q:o.w;
-    let cls='opt'+(it.t==='w'?' word':'');if(answered){if(k===it.k)cls+=' right';else if(k===it.a)cls+=' wrong'}
-    return `<button class="${cls} ${DEVA.test(txt)?'deva':''}" data-k="${esc(k)}" ${answered?'disabled':''}><span class="k">${'ABCD'[i]}</span><span>${esc(txt)}</span></button>`}).join('');
+  const head=(t,cls)=>`<p class="head ${DEVA.test(t)?'deva':''} ${cls||''}"><span>${esc(t)}</span></p>`;
+  const posL=w.pos?`<div class="pos">${esc(posAbbr(w.pos))}</div>`:'';
+  let q='',body='';
+  const mc=(keys,txtOf,wordStyle)=>keys.map((k,i)=>{const o=WORDS.get(k);if(!o)return'';let st='';if(answered){if(k===it.k)st='right';else if(it.c===i)st='wrong'}return optBtn(i,txtOf(o),st,answered,wordStyle?'word':'')}).join('');
+  if(it.t==='m'){q=`<div class="prompt">What does this mean?</div><div>${head(w.w)}${posL}</div>`;body=mc(it.o,o=>o.q)}
+  else if(it.t==='w'){q=`<div class="prompt">Which word fits this meaning?</div><p class="def ${DEVA.test(w.q)&&!/[a-z]/i.test(w.q)?'deva':''}">${esc(w.q)}</p>`;body=mc(it.o,o=>o.w,true)}
+  else if(it.t==='fill'){const ex=(w.ex||'').split(' ; ')[0];q=`<div class="prompt">Fill in the blank</div><p class="def">“${esc(maskIn(ex,w.w))}”</p>`;body=mc(it.o,o=>o.w,true)}
+  else if(it.t==='hi'){q=`<div class="prompt">Which English word has this Hindi meaning?</div><p class="def deva">${esc(w.hi.split(' ; ')[0])}</p>`;body=mc(it.o,o=>o.w,true)}
+  else if(it.t==='tf'){const shown=it.tk&&WORDS.get(it.tk)?WORDS.get(it.tk).q:w.q;
+    q=`<div class="prompt">True or false?</div><div>${head(w.w)}${posL}</div><p class="def ${DEVA.test(shown)&&!/[a-z]/i.test(shown)?'deva':''}">means “${esc(shown)}”</p>`;
+    body=`<div class="tfrow">${['True','False'].map((t,i)=>{let st='';if(answered){if(i===it.ans)st='right';else if(it.c===i)st='wrong'}return `<button class="opt word tf ${st}" data-i="${i}" ${answered?'disabled':''}><span>${t}</span></button>`}).join('')}</div>`}
+  else if(it.t==='syn'){q=`<div class="prompt">Which word is closest in meaning to…</div>${head(w.w)}`;body=it.opts.map((t,i)=>{let st='';if(answered){if(i===it.ans)st='right';else if(it.c===i)st='wrong'}return optBtn(i,t,st,answered,'word')}).join('')}
+  else if(it.t==='scr'){
+    q=`<div class="prompt">Unscramble the letters to make the word that means</div><p class="def">${esc(w.q)}</p>`;
+    if(answered)body=`<div class="slots">${[...w.w.toLowerCase()].map(c=>`<span class="slot full">${esc(c)}</span>`).join('')}</div>${ok?'':`<p class="small">You tried: ${esc(it.c||'(skipped)')}</p>`}`;
+    else body=`<div class="slots" id="slots">${[...it.sc].map(()=>'<span class="slot"></span>').join('')}</div>
+      <div class="tiles" id="tiles">${[...it.sc].map((c,i)=>`<button class="tile" type="button" data-t="${i}">${esc(c)}</button>`).join('')}</div>
+      <div class="actions"><button class="btn" type="button" id="scrUndo">Undo</button><button class="btn" type="button" id="scrSkip">I don’t know</button></div>`}
+  else if(it.t==='gap'){
+    q=`<div class="prompt">Fill in the missing letters. The word means</div><p class="def">${esc(w.q)}</p><p class="gap">${[...it.gp].map(c=>c==='_'?'<span class="gl">_</span>':esc(c)).join('')}</p>`;
+    if(answered)body=ok?'':`<p class="small">You wrote: ${esc(it.c||'(skipped)')}</p>`;
+    else body=`<form class="gapform" id="gapForm" autocomplete="off"><label for="gapIn" class="vh">Your answer</label><input id="gapIn" autocapitalize="off" spellcheck="false" placeholder="Type the whole word" maxlength="40"><button class="btn primary" type="submit">Check</button></form>
+      <div class="actions"><button class="btn" type="button" id="gapSkip">I don’t know</button></div>`}
   let fb='';
-  if(answered){const ok=it.a===it.k;
-    fb=`<div class="fb"><div class="verdict ${ok?'ok':'bad'}">${ok?'Correct.':'Not quite. The answer is '+esc(w.w)+'.'}</div>
+  if(answered){
+    let verdict=ok?'Correct.':'Not quite. The answer is '+esc(w.w)+'.';
+    if(it.t==='tf'){const other=it.tk&&WORDS.get(it.tk);verdict=(ok?'Correct. ':'Not quite. ')+(it.ans===0?'It’s true.':'It’s false'+(other?': that meaning belongs to <b>'+esc(other.w)+'</b>.':'.'))}
+    if(it.t==='syn')verdict=(ok?'Correct. ':'Not quite. ')+'<b>'+esc(it.opts[it.ans])+'</b> is closest in meaning to '+esc(w.w)+'.';
+    fb=`<div class="fb"><div class="verdict ${ok?'ok':'bad'}">${verdict}</div>
+      ${it.t!=='m'&&it.t!=='syn'?`<div class="row"><div class="lab">Word</div><div class="val"><b>${esc(w.w)}</b>${w.pos?' <i>'+esc(posAbbr(w.pos))+'</i>':''}</div></div>`:''}
       ${w.en?`<div class="row"><div class="lab">Meaning</div><div class="val">${esc(w.en)}</div></div>`:''}
       ${w.hi?`<div class="row"><div class="lab">Hindi</div><div class="val deva">${esc(w.hi)}</div></div>`:''}
       ${w.ex?`<div class="row"><div class="lab">Usage</div><div class="val ex">${esc(w.ex)}</div></div>`:''}
       ${w.syn?`<div class="row"><div class="lab">Similar</div><div class="val">${esc(w.syn)}</div></div>`:''}</div>
       <div class="actions"><button class="btn primary" id="nextBtn">${idx===items.length-1?'See score':'Next word'}</button></div>`}
-  el.innerHTML=`<div class="dots">${dots}</div><div class="qmeta"><span>${quiz.practice?'Practice round':'Today'} · ${idx+1} of ${items.length}</span><span>noted ${esc(fmtDate(w.added))}</span></div>${q}<div class="opts">${opts}</div>${fb}`;
-  el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{if(it.a!=null)return;it.a=b.dataset.k;saveDay();renderQuiz();$('nextBtn')?.focus()});
+  el.innerHTML=`<div class="dots">${dots}</div><div class="qmeta"><span>${quiz.practice?'Practice':'Today'} · ${idx+1} of ${items.length}</span><span class="qtype">${QTYPES[it.t]||''}</span></div>${q}<div class="opts">${body}</div>${fb}`;
+  // wiring
+  el.querySelectorAll('.opt[data-i]').forEach(bn=>bn.onclick=()=>{const i=+bn.dataset.i;
+    if(it.o)answer(it,it.o[i]===it.k,i);else answer(it,i===it.ans,i)});
+  if(it.t==='scr'&&!answered){
+    const built=[];const tiles=[...el.querySelectorAll('.tile')],slots=[...el.querySelectorAll('.slot')];
+    const draw=()=>{slots.forEach((sl,i)=>{sl.textContent=built[i]!=null?it.sc[built[i]]:'';sl.classList.toggle('full',built[i]!=null)});tiles.forEach((t,i)=>t.disabled=built.includes(i))};
+    tiles.forEach((t,i)=>t.onclick=()=>{built.push(i);draw();if(built.length===it.sc.length){const guess=built.map(j=>it.sc[j]).join('');setTimeout(()=>answer(it,guess===w.w.toLowerCase(),guess),250)}});
+    $('scrUndo').onclick=()=>{built.pop();draw()};$('scrSkip').onclick=()=>answer(it,false,'');
+  }
+  if(it.t==='gap'&&!answered){
+    $('gapForm').onsubmit=e=>{e.preventDefault();const g=$('gapIn').value.trim().toLowerCase();if(!g)return;answer(it,g===w.w.toLowerCase(),g)};
+    $('gapSkip').onclick=()=>answer(it,false,'');setTimeout(()=>$('gapIn')&&$('gapIn').focus(),50);
+  }
   const nb=$('nextBtn');if(nb)nb.onclick=()=>{idx++;renderQuiz();window.scrollTo(0,0)};
 }
 function renderSummary(items){
   const sc=items.filter(i=>i.a===i.k).length;
-  const list=items.map(i=>{const w=WORDS.get(i.k),ok=i.a===i.k;return `<li><span class="mk ${ok?'ok':'bad'}">${ok?'✓':'✗'}</span><div><div class="w ${DEVA.test(w.w)?'deva':''}">${esc(w.w)}</div><div class="m ${DEVA.test(w.q)?'deva':''}">${esc(w.q)}</div></div></li>`}).join('');
+  const list=items.map(i=>{const w=WORDS.get(i.k),ok=i.a===i.k;return `<li><span class="mk ${ok?'ok':'bad'}">${ok?'✓':'✗'}</span><div><div class="w ${DEVA.test(w.w)?'deva':''}">${esc(w.w)} <span class="tag">${esc(QTYPES[i.t]||'')}</span></div><div class="m ${DEVA.test(w.q)?'deva':''}">${esc(w.q)}</div></div></li>`}).join('');
   $('quizCard').innerHTML=`<div class="qmeta"><span>${quiz.practice?'Practice round':'Today’s result'}</span><span>${quiz.practice?'':'next quiz tomorrow'}</span></div>
     <div class="score">${sc}<small> / ${items.length}</small></div>
     <p class="note">${sc===items.length?'Every word right.':'The words you missed will come back in later quizzes until you get them right.'}</p>
@@ -366,7 +460,9 @@ function renderSummary(items){
 }
 function startToday(){
   const saved=HIST[TODAY];
-  if(saved&&saved.items&&saved.items.length&&saved.items.every(i=>WORDS.has(i.k)))quiz={date:TODAY,items:saved.items.map(i=>({...i})),practice:false};
+  if(saved&&!saved.v&&saved.items&&saved.items.every(i=>i.a==null))delete HIST[TODAY];
+  const saved2=HIST[TODAY];
+  if(saved2&&saved2.items&&saved2.items.length&&saved2.items.every(i=>WORDS.has(i.k)))quiz={date:TODAY,v:saved2.v,items:saved2.items.map(i=>({...i})),practice:false};
   else{quiz=buildQuiz(TODAY+'|local',false);if(quiz)saveDay()}
   idx=quiz?quiz.items.findIndex(i=>i.a==null):0;if(quiz&&idx<0)idx=quiz.items.length;
   renderQuiz();
@@ -639,102 +735,130 @@ $('mwSave').onclick=async()=>{
 };
 $('mwClear').onclick=()=>{try{localStorage.removeItem('vq_mwkey')}catch(e){}$('mwKey').value='';showMsg($('mwMsg'),'Key removed. Searches use the Free Dictionary.','ok')};
 
-// ---------- own words ----------
-let editingKey=null,delArm=null;
+// ---------- add words (smart paste) ----------
+function showMsg(el,t,kind){el.hidden=!t;el.className='msg'+(kind?' '+kind:'');el.textContent=t||''}
+const POSRE=/^(noun|verb|adjective|adverb|preposition|conjunction|pronoun|exclamation|interjection|prefix|suffix|idiom|phrase|phrasal verb|determiner|abbreviation)s?\b[^a-z]*$/i;
+const JUNK=/^(formal|informal|literary|written|old-fashioned|slang|technical|british|american|north american|overview|usage examples|dictionary|pronunciation|english|learn to pronounce|similar and opposite words|definitions from oxford languages.*|definitions from .*|feedback|more definitions.*|translations?(,| and).*|use over time for.*|word origin.*|search for a word|people also ask|ai overview|show (more|less)|see more|all|images|videos|news|shopping|maps|books|web|tools|translate.*|listen|copy|share|related searches.*|\d+\.|[a-z]\.|archaic|dated|rare|figurative|humorous|derogatory|offensive|chiefly .*|(noun|verb|adjective|adverb|plural noun|past tense|past participle|gerund or present participle|3rd person present)\s*:.*|https?:\/\/\S+|www\.\S+|\[\d+\]|\(?\d{1,2}\/\d{1,2}\/\d{2,4}.*)$/i;
+function dedouble(s){const n=s.length;for(let k=Math.ceil(n/2);k<n;k++){const rest=s.slice(k);if(rest.length>=3&&s.startsWith(rest))return s.slice(0,k)}return null}
+function cleanHead(h){
+  h=String(h||'').replace(/<This message was edited>/g,'').trim();
+  h=h.replace(/^(what does|what is the meaning of|meaning of|define|definition of)\s+/i,'').replace(/\s+(mean|means)\??$/i,'')
+     .replace(/\s+(meaning in hindi|meaning in english|meaning|definition|in hindi|synonyms?)\??$/i,'').replace(/\s*\/[^/]{1,40}\/.*$/,'')
+     .replace(/[*"“”?:]+$/,'').replace(/^[*"“”]+/,'').replace(/\s*\(.*?\)\s*$/,'').trim();
+  return h;
+}
+const SENT=[ // "X means Y", "X is a ...", "X refers to ...", "X का हिंदी में अर्थ Y"
+  /^["“]?([^"”.,:;]{1,48}?)["”]?\s*(?:\([^)]*\)\s*)?(?:का हिंदी (?:में )?(?:अर्थ|मतलब)|का अर्थ|का मतलब)\s*(?:है|होता है)?\s*[:,-]?\s*(.+)$/,
+  /^(?:to\s+)?["“]?([A-Za-z][A-Za-z' -]{0,46}?)["”]?\s*(?:\/[^/]{1,40}\/\s*)?(?:,?\s*(?:a|an)\s+[a-z ]{0,30}(?:noun|verb|adjective|adverb|phrase|idiom|term|word),?\s*)?\s+(?:means|meaning|refers to|is defined as|denotes|signifies)\s+(.+)$/i,
+  /^(?:an?|the)\s+["“]?([A-Za-z][A-Za-z' -]{0,40}?)["”]?\s+is\s+(.+)$/i,
+  /^["“]?([A-Za-z][A-Za-z' -]{0,40}?)["”]?\s*(?:\/[^/]{1,40}\/)?\s*(?:\((?:noun|verb|adj\.?|adjective|adverb|n\.|v\.)\))?\s*[:–—]\s+(.+)$/i
+];
+function fromSentence(text){
+  const t=text.replace(/\s+/g,' ').trim();
+  let m=t.match(/^([A-Za-z][A-Za-z' -]{0,40})\/([^/]{1,40})\/(.+)$/);           // bohemian/bəˈhiːmiən/A bohemian is ...
+  const body=m?m[3].trim():t,headHint=m?m[1].trim():'';
+  for(const re of SENT){const r=body.match(re);if(r){const w=cleanHead(headHint||r[1]);const mean=r[2].trim().replace(/^["“]|["”]$/g,'');
+      if(w&&w.split(' ').length<=6)return{w,pos:'',en:DEVA.test(mean)&&!/[a-z]{4}/i.test(mean)?'':(re===SENT[2]?body:mean),hi:DEVA.test(mean)?(mean.match(/[ऀ-ॿ][ऀ-ॿ ,।()'"-]*/g)||[]).join(', ').replace(/\s*(है|होता है|होते हैं)?\s*[।.]?\s*$/,'').trim():'',ex:'',syn:''}}}
+  return null;
+}
+function parseBlock(lines){
+  lines=lines.filter(l=>!JUNK.test(l.trim())||/^\d+\.$/.test(l.trim()));
+  if(!lines.length)return null;
+  // headword: first short line that isn't pronunciation or a part of speech
+  let hi0=0;while(hi0<lines.length&&(POSRE.test(lines[hi0])||/^\d+\.$/.test(lines[hi0])))hi0++;
+  const first=lines[hi0]||'';
+  if(lines.length-hi0===1||first.split(/\s+/).length>6){const sres=fromSentence(lines.slice(hi0).join(' '));if(sres)return sres}
+  const it={w:cleanHead(first),pos:[],en:[],hi:[],ex:[],syn:[]};
+  const sm=first.match(/^([A-Za-z][A-Za-z' -]{0,40})\/([^/]{1,40})\/(.+)$/);if(sm){it.w=cleanHead(sm[1]);lines=[sm[1],sm[3],...lines.slice(hi0+1)];hi0=0}
+  let mode=null,last=null;
+  for(const raw of lines.slice(hi0+1)){const l=raw.trim();if(!l)continue;
+    if(/^similar:?$/i.test(l)||/^synonyms?:?$/i.test(l)){mode='syn';continue} if(/^(opposite|antonyms?):?$/i.test(l)){mode='x';continue}
+    if(POSRE.test(l)){it.pos.push(l.toLowerCase().replace(/[^a-z ]/g,'').trim());mode=null;last='pos';continue}
+    if(/^\d+\.$/.test(l)){last='sense';mode=null;continue}
+    if((l.includes('ˈ')||/^\/.*\/$/.test(l)||/^\\.*\\$/.test(l)||l.includes('‌'))&&l.length<40&&!it.en.length&&!it.hi.length)continue;
+    if(mode&&l.split(/\s+/).length<=4){if(mode==='syn')it.syn.push(l.replace(/,$/,''));continue} mode=null;
+    if(/^(similar|synonyms?):\s*\S/i.test(l)){it.syn.push(l.replace(/^[^:]+:\s*/,''));continue}
+    if(/^(eg|e\.g|example|for example)[.:]?\s/i.test(l)){it.ex.push(l.replace(/^[^\s]+\s*/,''));last='ex';continue}
+    const d=dedouble(l);if(d){it.ex.push(d);last='ex';continue}
+    if(/^["“‘]/.test(l)){it.ex.push(l.replace(/^["“‘]|["”’]$/g,''));last='ex';continue}
+    if(DEVA.test(l)&&!/[a-z]{3}/i.test(l)){if(it.hi.length===0&&!it.en.length&&lines.length>3&&l.split(/\s+/).length===1&&last===null){last='pron';continue}it.hi.push(l);last='hi';continue}
+    if(DEVA.test(l)){const sres=fromSentence(l);if(sres&&sres.hi){it.hi.push(sres.hi);continue}}
+    if(last==='hi'&&/[a-z]/i.test(l)&&it.en.length){it.ex.push(l);last='ex';continue}
+    const sres=l.split(/\s+/).length>3?l.match(new RegExp('^(?:an?\\s+)?"?'+it.w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'"?\\s+(?:means|is|refers to)\\s+(.+)$','i')):null;
+    it.en.push(sres?sres[1]:l.replace(/^:\s*/,''));last='en';
+  }
+  if(!it.w)return null;
+  return{w:it.w,pos:[...new Set(it.pos)].join(', '),en:it.en.join(' ; '),hi:it.hi.join(' ; '),ex:it.ex.join(' ; '),syn:it.syn.join(', ')};
+}
+function parsePaste(text){
+  text=String(text||'').replace(/\r/g,'').replace(/ /g,' ').replace(/<This message was edited>/g,'');
+  const all=text.split('\n').map(s=>s.trim());
+  const lines=all.filter(Boolean);if(!lines.length)return[];
+  const DASH=/^([^\-–—:=]{1,40}?)\s*(?:[-–—=:]|\s-\s)\s+(.+)$/;
+  const content=lines.filter(l=>!JUNK.test(l));
+  if(content.length>1&&content.every(l=>DASH.test(l)&&!/^\d+\.$/.test(l)))
+    return content.map(l=>{const m=l.match(DASH),mean=m[2].trim(),h=DEVA.test(mean)&&!/[a-z]{3}/i.test(mean);return{w:cleanHead(m[1]),pos:'',en:h?'':mean,hi:h?mean:'',ex:'',syn:''}});
+  // entries separated by --- or a blank line between blocks that each start with a short headword line
+  let blocks=text.split(/\n\s*-{3,}\s*\n|\n\s*\n\s*\n/).map(b=>b.split('\n').map(s=>s.trim()).filter(Boolean)).filter(b=>b.length);
+  if(blocks.length===1){
+    const paras=text.split(/\n\s*\n/).map(b=>b.split('\n').map(s=>s.trim()).filter(Boolean)).filter(b=>b.length);
+    const looksMulti=paras.length>1&&paras.every(p=>{const h=p.filter(l=>!JUNK.test(l))[0]||'';return h.split(/\s+/).length<=4&&!/^["“]/.test(h)&&!POSRE.test(h)&&!DEVA.test(h)&&p.length>1});
+    if(looksMulti)blocks=paras;
+  }
+  return blocks.map(b=>{if(b.length===1){const l=b[0];const m=l.match(DASH);if(m&&m[1].split(' ').length<=5){const mean=m[2].trim(),h=DEVA.test(mean)&&!/[a-z]{3}/i.test(mean);return{w:cleanHead(m[1]),pos:'',en:h?'':mean,hi:h?mean:'',ex:'',syn:''}}
+      return fromSentence(l)||{w:cleanHead(l),pos:'',en:'',hi:'',ex:'',syn:''}}
+    return parseBlock(b)}).filter(x=>x&&x.w);
+}
+window.__parsePaste=parsePaste;window.__vq=()=>({quiz,idx,W:k=>WORDS.get(k)});
+let pending=[];
+function renderPreview(){
+  $('preview').innerHTML=pending.map((x,i)=>`<li class="${x.en||x.hi?'':'bad'}" data-i="${i}">
+    <div class="pvtop"><input data-f="w" value="${esc(x.w)}" aria-label="Word">${WORDS.has(keyOf(x.w))?'<span class="tag">updates existing</span>':''}<button class="mini" type="button" data-rm="${i}" aria-label="Remove">✕</button></div>
+    <div class="lab">Meaning</div><textarea data-f="en" rows="2" placeholder="Meaning in English">${esc(x.en)}</textarea>
+    <div class="lab">Hindi</div><input data-f="hi" class="deva" value="${esc(x.hi)}" placeholder="हिंदी अर्थ">
+    <div class="lab">Example</div><input data-f="ex" value="${esc(x.ex)}" placeholder="Example sentence (optional)">
+  </li>`).join('');
+  $('preview').querySelectorAll('[data-f]').forEach(el=>el.oninput=()=>{const i=+el.closest('li').dataset.i;pending[i][el.dataset.f]=el.value;el.closest('li').className=(pending[i].en.trim()||pending[i].hi.trim())?'':'bad'});
+  $('preview').querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{pending.splice(+b.dataset.rm,1);if(pending.length)renderPreview();else{$('previewWrap').hidden=true}updateSaveLabel()});
+  updateSaveLabel();$('previewWrap').hidden=!pending.length;
+}
+function updateSaveLabel(){$('saveAdd').textContent=pending.length>1?'Add '+pending.length+' words to my words':'Add to my words'}
+function readPaste(){
+  const text=$('pasteBox').value.trim();if(!text){showMsg($('addMsg'),'Paste a word and its meaning first.','err');return}
+  pending=parsePaste(text).map(x=>({w:x.w,pos:x.pos||'',en:x.en||'',hi:x.hi||'',ex:x.ex||'',syn:x.syn||''}));
+  if(!pending.length){showMsg($('addMsg'),'Couldn’t find a word in that. Try putting the word on the first line and its meaning below it.','err');$('previewWrap').hidden=true;return}
+  const miss=pending.filter(x=>!x.en&&!x.hi).length;
+  showMsg($('addMsg'),miss?'Add a meaning for the word'+(miss>1?'s':'')+' marked in red, then tap Add.':'',miss?'err':'');
+  renderPreview();
+}
+$('readBtn').onclick=readPaste;
+$('pasteBox').addEventListener('paste',()=>setTimeout(readPaste,30));
+$('clearBtn').onclick=()=>{$('pasteBox').value='';pending=[];$('previewWrap').hidden=true;showMsg($('addMsg'),'');$('pasteBox').focus()};
+$('cancelAdd').onclick=()=>{pending=[];$('previewWrap').hidden=true;showMsg($('addMsg'),'')};
+$('saveAdd').onclick=()=>{
+  const items=pending.map(x=>({...x,w:x.w.trim().replace(/\s+/g,' '),en:x.en.trim(),hi:x.hi.trim(),ex:x.ex.trim()})).filter(x=>x.w);
+  const missing=items.filter(x=>!x.en&&!x.hi);
+  if(missing.length){showMsg($('addMsg'),'Add a meaning for '+missing.map(x=>'“'+x.w+'”').join(', ')+' first.','err');return}
+  let n=0;for(const it of items){const r=saveWord({...it,src:'own'});if(!r){showMsg($('addMsg'),'This browser is not letting the app save. Open it in Chrome or Edge, not in a private tab.','err');return}n++}
+  pending=[];$('previewWrap').hidden=true;$('pasteBox').value='';renderOwn();
+  showMsg($('addMsg'),(n===1?'Added “'+items[0].w+'”':'Added '+n+' words')+' to your words. '+(n===1?'It':'They')+' will come up in your quizzes more often this week.','ok');
+};
+// words added here: edit (back into the box) and delete
+let delArm=null;
 function ownWords(){return ADDED.filter(x=>x.src==='own').sort((a,b)=>(b.added||'').localeCompare(a.added||'')||a.w.localeCompare(b.w))}
 function renderOwn(){
   const list=ownWords();
   $('ownList').innerHTML=list.length?list.map(x=>`<li><div class="top"><span class="w ${DEVA.test(x.w)?'deva':''}">${esc(x.w)}</span>${x.pos?`<span class="pos" style="font-size:14px">${esc(posAbbr(x.pos))}</span>`:''}<span class="rowbtns"><button class="mini" type="button" data-edit="${esc(keyOf(x.w))}">Edit</button><button class="mini" type="button" data-del="${esc(keyOf(x.w))}">Delete</button></span></div>
-    ${x.en?`<div class="m">${esc(x.en)}</div>`:''}${x.hi?`<div class="m deva">${esc(x.hi)}</div>`:''}${x.ex?`<div class="m" style="font-style:italic;font-family:var(--display)">${esc(x.ex)}</div>`:''}${x.note?`<div class="small">From: ${esc(x.note)}</div>`:''}</li>`).join('')
-    :'<li class="empty">Words you add here will be listed here, where you can edit or delete them.</li>';
-  $('ownList').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>startEdit(b.dataset.edit));
+    ${x.en?`<div class="m">${esc(x.en)}</div>`:''}${x.hi?`<div class="m deva">${esc(x.hi)}</div>`:''}${x.ex?`<div class="m" style="font-style:italic;font-family:var(--display)">${esc(x.ex)}</div>`:''}</li>`).join('')
+    :'<li class="empty">Words you add from this tab are listed here, where you can edit or delete them.</li>';
+  $('ownList').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const x=ADDED.find(y=>keyOf(y.w)===b.dataset.edit);if(!x)return;
+    pending=[{w:x.w,pos:x.pos||'',en:x.en||'',hi:x.hi||'',ex:x.ex||'',syn:x.syn||''}];renderPreview();showMsg($('addMsg'),'Edit the word below, then tap Add to save your changes.','');window.scrollTo(0,0)});
   $('ownList').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
     const k=b.dataset.del;
-    if(delArm!==k){delArm=k;renderOwn();const nb=$('ownList').querySelector(`[data-del="${CSS.escape(k)}"]`);if(nb){nb.textContent='Tap again to delete';nb.classList.add('danger')}setTimeout(()=>{if(delArm===k){delArm=null;renderOwn()}},4000);return}
-    delArm=null;const list=ADDED.filter(x=>keyOf(x.w)!==k);LS.set('vq_added',list);ADDED=list;loadWords();renderStats();
-    if(editingKey===k)resetOwn();renderOwn();showMsg($('ownMsg'),'Deleted.','ok');
+    if(delArm!==k){delArm=k;b.textContent='Tap again to delete';b.classList.add('danger');setTimeout(()=>{if(delArm===k){delArm=null;renderOwn()}},4000);return}
+    delArm=null;const list=ADDED.filter(x=>keyOf(x.w)!==k);LS.set('vq_added',list);ADDED=list;loadWords();renderStats();renderOwn();
   });
 }
-function resetOwn(){editingKey=null;$('ownForm').reset();$('ownTitle').textContent='Add your own word';$('ownSave').textContent='Add to my words';$('ownCancel').hidden=true}
-function startEdit(k){
-  const x=ADDED.find(y=>keyOf(y.w)===k);if(!x)return;editingKey=k;
-  $('oW').value=x.w;$('oEn').value=x.en||'';$('oHi').value=x.hi||'';$('oPos').value=x.pos||'';$('oEx').value=x.ex||'';$('oSyn').value=x.syn||'';$('oNote').value=x.note||'';
-  $('ownTitle').textContent='Edit '+x.w;$('ownSave').textContent='Save changes';$('ownCancel').hidden=false;showMsg($('ownMsg'),'');
-  $('ownForm').scrollIntoView({block:'start'});$('oEn').focus();
-}
-$('ownCancel').onclick=()=>{resetOwn();showMsg($('ownMsg'),'')};
-$('ownForm').onsubmit=e=>{
-  e.preventDefault();
-  const w=$('oW').value.trim().replace(/\s+/g,' '),en=$('oEn').value.trim(),hi=$('oHi').value.trim();
-  if(!w){showMsg($('ownMsg'),'Type the word or phrase first.','err');$('oW').focus();return}
-  if(!en&&!hi){showMsg($('ownMsg'),'Add a meaning in English or Hindi so it can appear in your quiz.','err');$('oEn').focus();return}
-  const k=keyOf(w);
-  if(!editingKey&&WORDS.has(k)){const ex=WORDS.get(k);if(!$('ownSave').dataset.confirm){$('ownSave').dataset.confirm='1';$('ownSave').textContent='Replace existing meaning';showMsg($('ownMsg'),'“'+ex.w+'” is already in your words'+(ex.en?' as: '+ex.en.split(' ; ')[0]:'')+'. Tap again to replace it with this meaning.','err');return}}
-  delete $('ownSave').dataset.confirm;
-  if(editingKey&&editingKey!==k){ADDED=ADDED.filter(x=>keyOf(x.w)!==editingKey)}
-  const prevAdded=(ADDED.find(x=>keyOf(x.w)===(editingKey||k))||{}).added;
-  const item={w,pos:$('oPos').value,en,hi,ex:$('oEx').value.trim(),syn:$('oSyn').value.trim(),note:$('oNote').value.trim(),src:'own'};
-  const r=saveWord(item);
-  if(!r){showMsg($('ownMsg'),'This browser is not letting the app save. Open it in Chrome or Edge, not in a private tab.','err');return}
-  if(prevAdded){const it=ADDED.find(x=>keyOf(x.w)===k);if(it){it.added=prevAdded;LS.set('vq_added',ADDED);loadWords()}}
-  const wasEdit=!!editingKey;resetOwn();renderOwn();
-  showMsg($('ownMsg'),wasEdit?'Saved changes to “'+w+'”.':'Added “'+w+'” to your words. It will come up in your quizzes more often this week.','ok');
-};
-['oW','oEn','oHi'].forEach(id=>$(id).addEventListener('input',()=>{if($('ownSave').dataset.confirm){delete $('ownSave').dataset.confirm;$('ownSave').textContent=editingKey?'Save changes':'Add to my words';showMsg($('ownMsg'),'')}}));
-
-// ---------- adding ----------
-const POSRE=/^(noun|verb|adjective|adverb|preposition|conjunction|pronoun|exclamation|interjection|prefix|suffix|idiom|phrase|phrasal verb)s?\b[^a-z]*$/i;
-const SKIPRE=/^(formal|informal|literary|written|old-fashioned|slang|technical|british|american|overview|usage examples|dictionary|pronunciation|english|learn to pronounce|similar and opposite words|definitions from oxford languages.*|\d+\.|(noun|verb|adjective|plural noun|past tense|past participle|gerund.*|3rd person.*)\s*:.*)$/i;
-function dedouble(s){const n=s.length;for(let k=Math.ceil(n/2);k<n;k++){const rest=s.slice(k);if(rest.length>=3&&s.startsWith(rest))return s.slice(0,k)}return null}
-function parseBlock(lines){
-  const it={w:lines[0].replace(/[*:"?]+$/,'').replace(/^[*"]+/,'').trim(),pos:[],en:[],hi:[],ex:[],syn:[]};
-  let mode=null,last=null;
-  for(const raw of lines.slice(1)){const l=raw.trim();if(!l)continue;
-    if(/^similar:?$/i.test(l)){mode='syn';continue} if(/^opposite:?$/i.test(l)){mode='x';continue}
-    if(POSRE.test(l)){it.pos.push(l.toLowerCase());mode=null;last='pos';continue}
-    if(SKIPRE.test(l)){if(/^\d+\.$/.test(l))last='sense';continue}
-    if((l.includes('ˈ')||/^\/.*\/$/.test(l)||l.includes('\u200c'))&&l.length<40&&!it.en.length&&!it.hi.length)continue;
-    if(mode&&l.split(/\s+/).length<=4){if(mode==='syn')it.syn.push(l);continue} mode=null;
-    if(/^eg\.?\s/i.test(l)){it.ex.push(l.replace(/^eg\.?\s*/i,''));continue}
-    const d=dedouble(l);if(d){it.ex.push(d);last='ex';continue}
-    if(/^["“‘]/.test(l)){it.ex.push(l.replace(/^["“‘]|["”’]$/g,''));last='ex';continue}
-    if(DEVA.test(l)&&!/[a-z]{3}/i.test(l)){if(it.hi.length===0&&!it.en.length&&lines.length>3&&l.split(/\s+/).length===1&&last===null){last='pron';continue}it.hi.push(l);last='hi';continue}
-    if(last==='hi'){it.ex.push(l);last='ex';continue}
-    it.en.push(l);last='en';
-  }
-  return{w:it.w,pos:[...new Set(it.pos)].join(', '),en:it.en.join(' ; '),hi:it.hi.join(' ; '),ex:it.ex.join(' ; '),syn:it.syn.join(', ')};
-}
-function parsePaste(text){
-  const lines=text.split(/\n/).map(s=>s.trim()).filter(Boolean);if(!lines.length)return[];
-  const DASH=/^([^\-–:]{1,40}?)\s*[-–:]\s+(.+)$/;
-  if(lines.length>1&&lines.every(l=>DASH.test(l)))return lines.map(l=>{const m=l.match(DASH),mean=m[2],h=DEVA.test(mean)&&!/[a-z]/i.test(mean);return{w:m[1].trim(),pos:'',en:h?'':mean,hi:h?mean:'',ex:'',syn:''}});
-  if(lines.length===1){const m=lines[0].match(DASH);if(m)return[{w:m[1].trim(),pos:'',en:m[2],hi:'',ex:'',syn:''}];return[{w:lines[0],pos:'',en:'',hi:'',ex:'',syn:''}]}
-  // several entries separated by a line with only "---" or by two blank lines
-  const blocks=text.split(/\n\s*(?:---+)\s*\n|\n\s*\n\s*\n/).map(b=>b.split(/\n/).map(s=>s.trim()).filter(Boolean)).filter(b=>b.length);
-  return blocks.map(parseBlock);
-}
-let pending=[];
-function showMsg(el,t,kind){el.hidden=!t;el.className='msg'+(kind?' '+kind:'');el.textContent=t||''}
-$('readBtn').onclick=()=>{
-  const text=$('pasteBox').value.trim();if(!text){showMsg($('addMsg'),'Paste at least one word first.','err');return}
-  pending=parsePaste(text).filter(x=>x.w).map(x=>({...x,lang:DEVA.test(x.w)?'hi':'en',added:TODAY})).map(x=>({...x,q:quizMeaning(x)}));
-  if(!pending.length){showMsg($('addMsg'),'No words found. Try one word per line like "word - meaning".','err');return}
-  const noMeaning=pending.filter(x=>!x.en&&!x.hi).length;
-  showMsg($('addMsg'),noMeaning?noMeaning+' word(s) have no meaning yet. Add a meaning after the word, like "word - meaning", so they can appear in quizzes.':'',noMeaning?'err':'');
-  $('preview').innerHTML=pending.map(x=>`<li><span class="w ${x.lang==='hi'?'deva':''}">${esc(x.w)} ${WORDS.has(keyOf(x.w))?'<span class="tag">updates existing</span>':''}</span>${x.pos?`<span class="pos" style="font-size:14px">${esc(posAbbr(x.pos))}</span>`:''}<span>${esc(x.en)}</span>${x.hi?`<span class="deva" style="color:var(--muted)">${esc(x.hi)}</span>`:''}${x.ex?`<span style="font-style:italic;color:var(--muted);font-family:var(--display)">${esc(x.ex)}</span>`:''}</li>`).join('');
-  $('saveAdd').textContent='Save '+pending.length+(pending.length===1?' word':' words');$('previewWrap').hidden=false;
-};
-$('clearBtn').onclick=()=>{$('pasteBox').value='';$('previewWrap').hidden=true;showMsg($('addMsg'),'')};
-$('cancelAdd').onclick=()=>{$('previewWrap').hidden=true;pending=[]};
-$('saveAdd').onclick=()=>{
-  const ok=LS.set('vq_added',[...ADDED,...pending.filter(x=>x.en||x.hi)]);
-  if(!ok){showMsg($('addMsg'),'This browser is not letting the app save. Open the file in Chrome or Safari (not inside a file viewer or private tab).','err');return}
-  const n=pending.filter(x=>x.en||x.hi).length;
-  ADDED=LS.get('vq_added',[]);loadWords();renderStats();
-  showMsg($('addMsg'),'Saved '+n+(n===1?' word':' words')+'. They will come up more often this week.','ok');
-  $('pasteBox').value='';$('previewWrap').hidden=true;pending=[];
-  if(!quiz)startToday();
-};
 
 // ---------- backup ----------
 function download(name,text,type){if(window.AndroidBridge){try{AndroidBridge.saveFile(name,text,type);return}catch(e){}}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
